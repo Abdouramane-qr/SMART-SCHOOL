@@ -57,6 +57,8 @@ class SessionController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return response()->noContent();
+        return response()
+            ->noContent()
+            ->withCookie(cookie()->forget(config('session.cookie')));
     }
 }

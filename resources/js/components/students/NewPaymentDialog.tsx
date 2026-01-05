@@ -29,6 +29,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { laravelPaiementsApi } from "@/services/laravelSchoolApi";
 import { toast } from "sonner";
+import { CURRENCIES, type Currency } from "@/lib/financeUtils";
 
 const paymentSchema = z.object({
   payment_type: z.string().min(1, "Type de paiement requis"),
@@ -45,16 +46,19 @@ interface NewPaymentDialogProps {
     full_name: string;
     student_id: string;
   };
+  currency?: Currency;
   isOpen: boolean;
   onClose: () => void;
 }
 
 export function NewPaymentDialog({
   student,
+  currency = "XOF",
   isOpen,
   onClose,
 }: NewPaymentDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const currencyLabel = CURRENCIES[currency]?.symbol ?? "XOF";
 
   const form = useForm<z.infer<typeof paymentSchema>>({
     resolver: zodResolver(paymentSchema),
@@ -147,7 +151,7 @@ export function NewPaymentDialog({
               name="amount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Montant total (DH)</FormLabel>
+                  <FormLabel>Montant total ({currencyLabel})</FormLabel>
                   <FormControl>
                     <Input type="number" step="0.01" {...field} />
                   </FormControl>
@@ -161,7 +165,7 @@ export function NewPaymentDialog({
               name="paid_amount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Montant payé (DH)</FormLabel>
+                  <FormLabel>Montant payé ({currencyLabel})</FormLabel>
                   <FormControl>
                     <Input type="number" step="0.01" {...field} />
                   </FormControl>

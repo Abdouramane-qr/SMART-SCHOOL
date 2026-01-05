@@ -19,6 +19,8 @@ class UserRoleController extends Controller
         if (! $user->hasRole($validated['role'])) {
             $user->assignRole($validated['role']);
         }
+        // Enforce role-scoped permissions only (no per-user overrides).
+        $user->syncPermissions([]);
 
         return response()->json(['data' => [
             'user_id' => $user->id,
@@ -35,6 +37,8 @@ class UserRoleController extends Controller
 
         $user = User::findOrFail($validated['user_id']);
         $user->removeRole($validated['role']);
+        // Enforce role-scoped permissions only (no per-user overrides).
+        $user->syncPermissions([]);
 
         return response()->noContent();
     }

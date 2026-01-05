@@ -44,10 +44,11 @@ export default function Timetable() {
   const [filterClass, setFilterClass] = useState<string>("all");
   const [editEntry, setEditEntry] = useState<TimetableEntry | null>(null);
   const [deleteEntry, setDeleteEntry] = useState<TimetableEntry | null>(null);
-  const { hasRole, hasAnyRole } = useUserRole();
+  const { hasAnyRole, hasAnyPermission } = useUserRole();
 
-  const canEdit = hasRole("admin");
-  const canView = hasAnyRole(["admin", "enseignant", "eleve", "parent"]);
+  const canEdit =
+    hasAnyPermission(["timetable.create", "timetable.update"]) ||
+    hasAnyRole(["admin"]);
 
   const { data: timetable = [], isLoading, refetch } = useQuery({
     queryKey: ["timetable"],
@@ -87,7 +88,7 @@ export default function Timetable() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Emploi du temps</h1>
+          <h1 className="text-[26px] md:text-[28px] font-bold text-foreground">Emploi du temps</h1>
           <p className="text-muted-foreground mt-1">
             Plage horaire: 07:00 - 18:00 • Durée variable des cours
           </p>
@@ -106,14 +107,14 @@ export default function Timetable() {
               ))}
             </SelectContent>
           </Select>
-          <RoleGuard allowedRoles={["admin"]}>
+          <RoleGuard allowedRoles={["admin"]} allowedPermissions={["timetable.create"]}>
             <AddTimetableDialog onSuccess={refetch} />
           </RoleGuard>
         </div>
       </div>
 
       {/* Info Banner for non-admin users */}
-      <RoleGuard allowedRoles={["enseignant", "eleve", "parent"]}>
+      <RoleGuard allowedRoles={["enseignant", "eleve", "parent"]} allowedPermissions={["timetable.view_any", "timetable.view"]}>
         <div className="flex items-center gap-2 p-3 bg-muted rounded-lg border">
           <Info className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm text-muted-foreground">

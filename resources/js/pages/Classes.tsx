@@ -134,7 +134,7 @@ export default function Classes() {
           {filteredClasses.map((classItem) => (
             <Card
               key={classItem.id}
-              className="shadow-md hover:shadow-lg transition-all hover:-translate-y-1"
+              className="shadow-sm"
             >
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
@@ -144,7 +144,7 @@ export default function Classes() {
                       {classItem.level}
                     </Badge>
                   </div>
-                  <div className="h-10 w-10 rounded-lg bg-gradient-primary/10 flex items-center justify-center">
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
                     <BookOpen className="h-5 w-5 text-primary" />
                   </div>
                 </div>

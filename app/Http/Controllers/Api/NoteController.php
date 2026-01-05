@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\NoteResource;
 use App\Models\Note;
+use App\Models\AcademicYear;
 use App\Support\CacheKey;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -16,8 +17,14 @@ class NoteController extends Controller
      */
     public function index(Request $request)
     {
-        $schoolId = $request->integer('school_id');
+        $schoolId = $request->integer('school_id') ?: $request->user()?->school_id;
         $academicYearId = $request->integer('academic_year_id');
+        if (empty($academicYearId) && ! empty($schoolId)) {
+            $academicYearId = AcademicYear::query()
+                ->where('school_id', $schoolId)
+                ->where('is_active', true)
+                ->value('id');
+        }
         $perPage = $request->integer('per_page') ?: 15;
         $page = $request->integer('page') ?: 1;
 
@@ -34,15 +41,35 @@ class NoteController extends Controller
 
         $result = $cache->remember($key, now()->addMinutes(5), function () use ($request, $perPage, $studentIds) {
             $query = Note::query()
-                ->with(['eleve', 'matiere', 'classe', 'academicYear', 'school'])
+                ->select([
+                    'id',
+                    'school_id',
+                    'eleve_id',
+                    'matiere_id',
+                    'class_id',
+                    'academic_year_id',
+                    'value',
+                    'term',
+                    'grade_type',
+                    'weight',
+                    'description',
+                    'evaluation_date',
+                    'created_at',
+                    'updated_at',
+                ])
+                ->with([
+                    'eleve:id,student_id,full_name,first_name,last_name',
+                    'matiere:id,name,code,coefficient',
+                    'classe:id,name,level',
+                ])
                 ->orderByDesc('id');
 
-            if ($request->filled('school_id')) {
-                $query->where('school_id', $request->integer('school_id'));
+            if (! empty($schoolId)) {
+                $query->where('school_id', $schoolId);
             }
 
-            if ($request->filled('academic_year_id')) {
-                $query->where('academic_year_id', $request->integer('academic_year_id'));
+            if (! empty($academicYearId)) {
+                $query->where('academic_year_id', $academicYearId);
             }
 
             if ($request->filled('eleve_id')) {
@@ -101,7 +128,11 @@ class NoteController extends Controller
         $note = Note::create($validated);
         Cache::tags(CacheKey::tags($note->school_id, $note->academic_year_id))->flush();
 
-        return new NoteResource($note->load(['eleve', 'matiere', 'classe', 'academicYear', 'school']));
+        return new NoteResource($note->load([
+            'eleve:id,student_id,full_name,first_name,last_name',
+            'matiere:id,name,code,coefficient',
+            'classe:id,name,level',
+        ]));
     }
 
     /**
@@ -116,7 +147,11 @@ class NoteController extends Controller
         $cache = $tags ? Cache::tags($tags) : Cache::store();
 
         $resource = $cache->remember($key, now()->addMinutes(5), function () use ($note) {
-            return $note->load(['eleve', 'matiere', 'classe', 'academicYear', 'school']);
+            return $note->load([
+                'eleve:id,student_id,full_name,first_name,last_name',
+                'matiere:id,name,code,coefficient',
+                'classe:id,name,level',
+            ]);
         });
 
         return new NoteResource($resource);
@@ -144,7 +179,11 @@ class NoteController extends Controller
         $note->update($validated);
         Cache::tags(CacheKey::tags($note->school_id, $note->academic_year_id))->flush();
 
-        return new NoteResource($note->load(['eleve', 'matiere', 'classe', 'academicYear', 'school']));
+        return new NoteResource($note->load([
+            'eleve:id,student_id,full_name,first_name,last_name',
+            'matiere:id,name,code,coefficient',
+            'classe:id,name,level',
+        ]));
     }
 
     /**

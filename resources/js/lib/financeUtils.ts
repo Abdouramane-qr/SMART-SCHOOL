@@ -2,12 +2,13 @@
  * Utilitaires pour les calculs financiers multi-devises
  */
 
-export type Currency = "XOF" | "USD" | "EUR";
+export type Currency = "XOF" | "USD" | "EUR" | "DH";
 
 export const CURRENCIES: Record<Currency, { symbol: string; name: string; locale: string }> = {
   XOF: { symbol: "FCFA", name: "Franc CFA", locale: "fr-FR" },
   USD: { symbol: "$", name: "Dollar américain", locale: "en-US" },
   EUR: { symbol: "€", name: "Euro", locale: "fr-FR" },
+  DH: { symbol: "DH", name: "Dirham marocain", locale: "fr-FR" },
 };
 
 // Taux de change par défaut (vers XOF)
@@ -15,6 +16,7 @@ export const DEFAULT_EXCHANGE_RATES: Record<Currency, number> = {
   XOF: 1,
   USD: 615,
   EUR: 656,
+  DH: 1,
 };
 
 /**
@@ -39,7 +41,7 @@ export function convertFromXOF(amountXOF: number, targetCurrency: Currency, cust
 export function formatAmount(amount: number, currency: Currency = "XOF"): string {
   const config = CURRENCIES[currency];
   
-  if (currency === "XOF") {
+  if (currency === "XOF" || currency === "DH") {
     return `${amount.toLocaleString(config.locale, { maximumFractionDigits: 0 })} ${config.symbol}`;
   }
   

@@ -253,7 +253,7 @@ export default function Messages() {
           <Dialog open={isComposeOpen} onOpenChange={setIsComposeOpen}>
             <ActionTooltip tooltipKey="composeMessage">
               <DialogTrigger asChild>
-                <Button className="bg-gradient-primary">
+                <Button className="bg-primary">
                   <Plus className="mr-2 h-4 w-4" />
                   Nouveau message
                 </Button>
@@ -394,7 +394,7 @@ export default function Messages() {
                       >
                         <div className="flex items-start gap-3">
                           <Avatar className="h-10 w-10">
-                            <AvatarFallback className="bg-gradient-primary text-primary-foreground text-xs">
+                            <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                               {person?.full_name ? getInitials(person.full_name) : "?"}
                             </AvatarFallback>
                           </Avatar>
@@ -448,7 +448,7 @@ export default function Messages() {
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
                     <Avatar className="h-12 w-12">
-                      <AvatarFallback className="bg-gradient-primary text-primary-foreground">
+                      <AvatarFallback className="bg-primary text-primary-foreground">
                         {selectedMessage.sender?.full_name
                           ? getInitials(selectedMessage.sender.full_name)
                           : "?"}

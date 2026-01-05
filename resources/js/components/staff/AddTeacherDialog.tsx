@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { laravelTeachersApi } from "@/services/laravelSchoolApi";
 import { toast } from "sonner";
+import { CURRENCIES } from "@/lib/financeUtils";
+import { useFinanceCurrency } from "@/hooks/useFinanceCurrency";
 
 interface AddTeacherDialogProps {
   open: boolean;
@@ -14,6 +16,8 @@ interface AddTeacherDialogProps {
 
 export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDialogProps) {
   const [loading, setLoading] = useState(false);
+  const { defaultCurrency } = useFinanceCurrency();
+  const currencySymbol = CURRENCIES[defaultCurrency]?.symbol ?? defaultCurrency;
   const [formData, setFormData] = useState({
     full_name: "",
     email: "",
@@ -104,7 +108,7 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="monthly_salary">Salaire mensuel (DH)</Label>
+              <Label htmlFor="monthly_salary">Salaire mensuel ({currencySymbol})</Label>
               <Input
                 id="monthly_salary"
                 type="number"

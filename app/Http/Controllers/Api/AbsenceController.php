@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\AbsenceResource;
 use App\Models\Absence;
+use App\Models\AcademicYear;
 use App\Support\CacheKey;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -16,8 +17,14 @@ class AbsenceController extends Controller
      */
     public function index(Request $request)
     {
-        $schoolId = $request->integer('school_id');
+        $schoolId = $request->integer('school_id') ?: $request->user()?->school_id;
         $academicYearId = $request->integer('academic_year_id');
+        if (empty($academicYearId) && ! empty($schoolId)) {
+            $academicYearId = AcademicYear::query()
+                ->where('school_id', $schoolId)
+                ->where('is_active', true)
+                ->value('id');
+        }
         $perPage = $request->integer('per_page') ?: 15;
         $page = $request->integer('page') ?: 1;
 
@@ -34,16 +41,35 @@ class AbsenceController extends Controller
 
         $result = $cache->remember($key, now()->addMinutes(5), function () use ($request, $perPage, $studentIds) {
             $query = Absence::query()
-                ->with(['eleve', 'classe', 'school'])
+                ->select([
+                    'id',
+                    'school_id',
+                    'eleve_id',
+                    'classe_id',
+                    'academic_year_id',
+                    'date',
+                    'absence_date',
+                    'absence_type',
+                    'is_justified',
+                    'justified',
+                    'reason',
+                    'duration_minutes',
+                    'created_at',
+                    'updated_at',
+                ])
+                ->with([
+                    'eleve:id,student_id,full_name,first_name,last_name',
+                    'classe:id,name,level',
+                ])
                 ->orderByDesc('date')
                 ->orderByDesc('id');
 
-            if ($request->filled('school_id')) {
-                $query->where('school_id', $request->integer('school_id'));
+            if (! empty($schoolId)) {
+                $query->where('school_id', $schoolId);
             }
 
-            if ($request->filled('academic_year_id')) {
-                $yearId = $request->integer('academic_year_id');
+            if (! empty($academicYearId)) {
+                $yearId = $academicYearId;
                 $query->whereHas('eleve.classe', function ($builder) use ($yearId) {
                     $builder->where('academic_year_id', $yearId);
                 });
@@ -99,7 +125,10 @@ class AbsenceController extends Controller
         $academicYearId = $absence->academic_year_id ?? $absence->eleve?->classe?->academic_year_id;
         Cache::tags(CacheKey::tags($absence->school_id, $academicYearId))->flush();
 
-        return new AbsenceResource($absence->load(['eleve', 'classe', 'school']));
+        return new AbsenceResource($absence->load([
+            'eleve:id,student_id,full_name,first_name,last_name',
+            'classe:id,name,level',
+        ]));
     }
 
     /**
@@ -114,7 +143,10 @@ class AbsenceController extends Controller
         $cache = $tags ? Cache::tags($tags) : Cache::store();
 
         $resource = $cache->remember($key, now()->addMinutes(5), function () use ($absence) {
-            return $absence->load(['eleve', 'classe', 'school']);
+            return $absence->load([
+                'eleve:id,student_id,full_name,first_name,last_name',
+                'classe:id,name,level',
+            ]);
         });
 
         return new AbsenceResource($resource);
@@ -156,7 +188,10 @@ class AbsenceController extends Controller
         $academicYearId = $absence->academic_year_id ?? $absence->eleve?->classe?->academic_year_id;
         Cache::tags(CacheKey::tags($absence->school_id, $academicYearId))->flush();
 
-        return new AbsenceResource($absence->load(['eleve', 'classe', 'school']));
+        return new AbsenceResource($absence->load([
+            'eleve:id,student_id,full_name,first_name,last_name',
+            'classe:id,name,level',
+        ]));
     }
 
     /**

@@ -31,7 +31,7 @@ import { laravelStudentsApi } from "@/services/laravelSchoolApi";
 import { toast } from "sonner";
 
 const studentSchema = z.object({
-  student_id: z.string().min(1, "ID élève requis").max(50),
+  student_id: z.string().max(50).optional().or(z.literal("")),
   full_name: z.string().min(2, "Nom requis").max(100),
   gender: z.string().optional(),
   date_of_birth: z.string().optional(),
@@ -118,7 +118,7 @@ export function EditStudentDialog({ student, isOpen, onClose, onSuccess }: EditS
 
       const { firstName, lastName } = splitFullName(values.full_name);
       await laravelStudentsApi.update(student.id, {
-        student_id: values.student_id,
+        student_id: values.student_id || undefined,
         full_name: values.full_name,
         first_name: firstName || values.full_name,
         last_name: lastName || "",
@@ -162,7 +162,7 @@ export function EditStudentDialog({ student, isOpen, onClose, onSuccess }: EditS
                   name="student_id"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>ID Élève *</FormLabel>
+                  <FormLabel>ID Élève</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>

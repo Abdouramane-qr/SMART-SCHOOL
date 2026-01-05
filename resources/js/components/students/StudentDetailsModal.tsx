@@ -22,6 +22,7 @@ import {
   normalizeStudentName,
   normalizeStudentPayments,
 } from "@/services/laravelSchoolApi";
+import { formatAmount, type Currency } from "@/lib/financeUtils";
 
 interface StudentDetailsModalProps {
   student: {
@@ -30,12 +31,14 @@ interface StudentDetailsModalProps {
     student_id: string;
     class_name: string | null;
   };
+  currency?: Currency;
   isOpen: boolean;
   onClose: () => void;
 }
 
 export function StudentDetailsModal({
   student,
+  currency = "XOF",
   isOpen,
   onClose,
 }: StudentDetailsModalProps) {
@@ -170,9 +173,9 @@ export function StudentDetailsModal({
                             : "N/A"}
                         </TableCell>
                         <TableCell>{payment.payment_type || payment.method || "N/A"}</TableCell>
-                        <TableCell>{parseFloat(payment.amount?.toString() || "0").toLocaleString()} DH</TableCell>
+                        <TableCell>{formatAmount(Number(payment.amount || 0), currency)}</TableCell>
                         <TableCell className="font-medium text-green-600">
-                          {parseFloat((payment.paid_amount ?? payment.amount)?.toString() || "0").toLocaleString()} DH
+                          {formatAmount(Number(payment.paid_amount ?? payment.amount ?? 0), currency)}
                         </TableCell>
                         <TableCell>{getStatusBadge(payment.status)}</TableCell>
                       </TableRow>

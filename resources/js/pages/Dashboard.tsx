@@ -222,6 +222,7 @@ export default function Dashboard() {
         paymentDistribution: paymentDistribution.map(p => ({ name: p.name, value: p.value })),
         monthlyPayments: financeStats.monthlyData.map(d => ({ month: d.month, montant: d.revenus })),
         exportDate: new Date().toLocaleDateString("fr-FR"),
+        currency: selectedCurrency,
       });
       toast.success("Rapport PDF généré avec succès");
     } catch (error) {
@@ -243,6 +244,7 @@ export default function Dashboard() {
         paymentDistribution: paymentDistribution.map(p => ({ name: p.name, value: p.value })),
         monthlyPayments: financeStats.monthlyData.map(d => ({ month: d.month, montant: d.revenus })),
         exportDate: new Date().toLocaleDateString("fr-FR"),
+        currency: selectedCurrency,
       });
       toast.success("Rapport Excel généré avec succès");
     } catch (error) {

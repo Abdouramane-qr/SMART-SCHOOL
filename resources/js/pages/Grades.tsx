@@ -76,8 +76,10 @@ export default function Grades() {
   const [editGrade, setEditGrade] = useState<GradeWithRelations | null>(null);
   const [deleteGrade, setDeleteGrade] = useState<GradeWithRelations | null>(null);
 
-  const { hasRole, hasAnyRole } = useUserRole();
-  const canEdit = hasAnyRole(["admin", "enseignant"]);
+  const { hasAnyRole, hasAnyPermission } = useUserRole();
+  const canEdit =
+    hasAnyPermission(["note.create", "note.update"]) ||
+    hasAnyRole(["admin", "enseignant"]);
 
   const {
     data: grades = [],
@@ -145,7 +147,7 @@ export default function Grades() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Gestion des notes</h1>
+          <h1 className="text-[26px] md:text-[28px] font-bold text-foreground">Gestion des notes</h1>
           <p className="text-muted-foreground mt-1">
             {filteredGrades.length} notes • Types: Devoir, Composition, Interrogation, Projet
           </p>

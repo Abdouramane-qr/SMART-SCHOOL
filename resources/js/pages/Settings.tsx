@@ -52,11 +52,11 @@ export default function Settings() {
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <div className="h-12 w-12 md:h-14 md:w-14 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
+        <div className="h-12 w-12 md:h-14 md:w-14 rounded-xl bg-primary/10 flex items-center justify-center shadow-sm">
           <SettingsIcon className="h-6 w-6 md:h-8 md:w-8 text-primary-foreground" />
         </div>
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Paramètres</h1>
+          <h1 className="text-2xl md:text-[26px] md:text-[28px] font-bold text-foreground">Paramètres</h1>
           <p className="text-sm md:text-base text-muted-foreground mt-1">
             Configuration générale de l'établissement
           </p>
@@ -68,8 +68,8 @@ export default function Settings() {
         {tabs.map((tab) => (
           <Card 
             key={tab.id} 
-            className={`cursor-pointer transition-all hover:shadow-lg hover:border-primary/50 ${
-              activeTab === tab.id ? 'border-primary shadow-md' : ''
+            className={`cursor-pointer transition-colors hover:border-primary/50 ${
+              activeTab === tab.id ? 'border-primary shadow-sm' : ''
             }`}
             onClick={() => setActiveTab(tab.id)}
           >

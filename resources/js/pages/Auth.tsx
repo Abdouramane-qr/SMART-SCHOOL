@@ -94,20 +94,23 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-primary p-4">
-      <Card className="w-full max-w-md shadow-blue">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <Card className="w-full max-w-md shadow-sm">
         <CardHeader className="text-center space-y-4">
-          <div className="mx-auto h-16 w-16 rounded-full bg-gradient-primary flex items-center justify-center">
+          <div className="mx-auto h-16 w-16 rounded-full bg-primary flex items-center justify-center">
             <GraduationCap className="h-8 w-8 text-white" />
           </div>
           <div>
-            <CardTitle className="text-2xl font-bold">SMART SCHOOL</CardTitle>
+            <CardTitle className="text-[26px] font-bold">SMART SCHOOL</CardTitle>
             <CardDescription>
               {isLogin ? "Connectez-vous à votre compte" : "Créez votre compte"}
             </CardDescription>
           </div>
         </CardHeader>
         <CardContent>
+          <p className="mb-4 text-xs text-muted-foreground">
+            Accès admin uniquement via Filament. Tous les autres rôles utilisent cette interface.
+          </p>
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <div className="space-y-2">
@@ -149,7 +152,7 @@ export default function Auth() {
 
             <Button
               type="submit"
-              className="w-full bg-gradient-primary shadow-blue"
+              className="w-full bg-primary shadow-sm"
               disabled={loading}
             >
               {loading ? "Chargement..." : isLogin ? "Se connecter" : "S'inscrire"}

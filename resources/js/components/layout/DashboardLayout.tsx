@@ -110,7 +110,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="relative">
                       <Avatar className="h-8 w-8">
-                        <AvatarFallback className="bg-gradient-primary text-primary-foreground text-sm font-medium">
+                        <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
                           {getUserInitials()}
                         </AvatarFallback>
                       </Avatar>

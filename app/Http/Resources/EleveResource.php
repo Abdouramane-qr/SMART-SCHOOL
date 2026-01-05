@@ -15,8 +15,8 @@ class EleveResource extends JsonResource
     public function toArray(Request $request): array
     {
         $payments = $this->whenLoaded('paiements');
-        $totalPaid = $payments ? $payments->sum(fn ($payment) => (float) ($payment->paid_amount ?? $payment->amount ?? 0)) : 0;
-        $totalDue = $payments ? $payments->sum(fn ($payment) => (float) ($payment->amount ?? 0)) : 0;
+        $totalPaid = $this->total_paid ?? ($payments ? $payments->sum(fn ($payment) => (float) ($payment->paid_amount ?? $payment->amount ?? 0)) : 0);
+        $totalDue = $this->total_due ?? ($payments ? $payments->sum(fn ($payment) => (float) ($payment->amount ?? 0)) : 0);
 
         return [
             'id' => $this->id,
@@ -36,8 +36,8 @@ class EleveResource extends JsonResource
             'classe' => new ClasseResource($this->whenLoaded('classe')),
             'school' => new SchoolResource($this->whenLoaded('school')),
             'paiements' => PaiementResource::collection($payments),
-            'total_paid' => $totalPaid,
-            'total_due' => $totalDue,
+            'total_paid' => (float) $totalPaid,
+            'total_due' => (float) $totalDue,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

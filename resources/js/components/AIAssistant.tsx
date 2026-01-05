@@ -163,9 +163,9 @@ export function AIAssistant() {
         <button
           onClick={() => setIsOpen(true)}
           className={cn(
-            "fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg",
+            "fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-sm",
             "flex items-center justify-center transition-all hover:scale-110",
-            "bg-gradient-to-br from-primary to-accent text-primary-foreground",
+            "bg-primary/10 text-primary-foreground",
             "animate-in fade-in slide-in-from-bottom-4"
           )}
         >

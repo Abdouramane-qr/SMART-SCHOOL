@@ -41,12 +41,14 @@ interface MenuItem {
   url: string;
   icon: any;
   roles: AppRole[];
+  permissions?: string[];
   external?: boolean;
 }
 
 interface MenuSection {
   title: string;
   roles: AppRole[];
+  permissions?: string[];
   items: MenuItem[];
 }
 
@@ -57,46 +59,104 @@ const menuSections: MenuSection[] = [
     roles: [],
     items: [
       { title: "Tableau de bord", url: "/", icon: LayoutDashboard, roles: [] },
-      { title: "Messagerie", url: "/messages", icon: Mail, roles: [] },
+      {
+        title: "Messagerie",
+        url: "/messages",
+        icon: Mail,
+        roles: [],
+        permissions: ["message.view_any", "message.view"],
+      },
     ],
   },
   {
     title: "Gestion Scolaire",
     roles: ["admin", "comptable", "enseignant"],
+    permissions: [
+      "eleve.view_any",
+      "eleve.view",
+      "classe.view_any",
+      "classe.view",
+      "timetable.view_any",
+      "timetable.view",
+      "absence.view_any",
+      "absence.view",
+      "note.view_any",
+      "note.view",
+    ],
     items: [
-      { title: "Élèves", url: "/students", icon: Users, roles: ["admin", "comptable", "enseignant"] },
-      { title: "Classes", url: "/classes", icon: BookOpen, roles: ["admin", "enseignant"] },
-      { title: "Emploi du temps", url: "/timetable", icon: Clock, roles: ["admin", "enseignant"] },
-      { title: "Absences", url: "/absences", icon: UserX, roles: ["admin", "enseignant"] },
-      { title: "Notes", url: "/grades", icon: ClipboardList, roles: ["admin", "enseignant"] },
+      {
+        title: "Élèves",
+        url: "/students",
+        icon: Users,
+        roles: ["admin", "comptable", "enseignant"],
+        permissions: ["eleve.view_any", "eleve.view"],
+      },
+      {
+        title: "Classes",
+        url: "/classes",
+        icon: BookOpen,
+        roles: ["admin", "enseignant"],
+        permissions: ["classe.view_any", "classe.view"],
+      },
+      {
+        title: "Emploi du temps",
+        url: "/timetable",
+        icon: Clock,
+        roles: ["admin", "enseignant"],
+        permissions: ["timetable.view_any", "timetable.view"],
+      },
+      {
+        title: "Absences",
+        url: "/absences",
+        icon: UserX,
+        roles: ["admin", "enseignant"],
+        permissions: ["absence.view_any", "absence.view"],
+      },
+      {
+        title: "Notes",
+        url: "/grades",
+        icon: ClipboardList,
+        roles: ["admin", "enseignant"],
+        permissions: ["note.view_any", "note.view"],
+      },
     ],
   },
   {
     title: "Finances",
     roles: ["admin", "comptable"],
+    permissions: ["paiement.view_any", "paiement.view", "expense.view_any", "expense.view"],
     items: [
-      { title: "Comptabilité", url: "/finances", icon: DollarSign, roles: ["admin", "comptable"] },
+      {
+        title: "Comptabilité",
+        url: "/finances",
+        icon: DollarSign,
+        roles: ["admin", "comptable"],
+        permissions: ["paiement.view_any", "paiement.view", "expense.view_any", "expense.view"],
+      },
     ],
   },
   {
     title: "Administration (Filament)",
     roles: ["admin"],
+    permissions: ["user.view_any", "user.view"],
     items: [
-      { title: "Back-office", url: "/admin", icon: UserCog, roles: ["admin"], external: true },
-      { title: "Personnel", url: "/admin/enseignants", icon: Users, roles: ["admin"], external: true },
-      { title: "Inventaire", url: "/admin/assets", icon: ClipboardList, roles: ["admin"], external: true },
-      { title: "Paramètres finance", url: "/admin/parametres-finance", icon: DollarSign, roles: ["admin"], external: true },
-      { title: "Salaires", url: "/admin/salaries", icon: Wallet, roles: ["admin"], external: true },
-      { title: "Audits enseignants", url: "/admin/teacher-audits", icon: History, roles: ["admin"], external: true },
-      { title: "Parents", url: "/admin/parents", icon: Users, roles: ["admin"], external: true },
+      { title: "Back-office", url: "/admin", icon: UserCog, roles: ["admin"], external: true, permissions: ["user.view_any", "user.view"] },
+      { title: "Personnel", url: "/admin/enseignants", icon: Users, roles: ["admin"], external: true, permissions: ["enseignant.view_any", "enseignant.view"] },
+      { title: "Inventaire", url: "/admin/assets", icon: ClipboardList, roles: ["admin"], external: true, permissions: ["asset.view_any", "asset.view"] },
+      { title: "Paramètres finance", url: "/admin/parametres-finance", icon: DollarSign, roles: ["admin"], external: true, permissions: ["finance_setting.view_any", "finance_setting.view"] },
+      { title: "Salaires", url: "/admin/salaries", icon: Wallet, roles: ["admin"], external: true, permissions: ["salary.view_any", "salary.view"] },
+      { title: "Audits enseignants", url: "/admin/teacher-audits", icon: History, roles: ["admin"], external: true, permissions: ["teacher_audit.view_any", "teacher_audit.view"] },
+      { title: "Parents", url: "/admin/parents", icon: Users, roles: ["admin"], external: true, permissions: ["parent.view_any", "parent.view"] },
+      { title: "Comptes manquants", url: "/admin/comptes-manquants", icon: UserX, roles: ["admin"], external: true, permissions: ["user.view_any", "user.view"] },
     ],
   },
 ];
 
 export function AppSidebar() {
   const { open, toggleSidebar } = useSidebar();
-  const { roles, hasAnyRole, loading } = useUserRole();
+  const { permissions, hasAnyRole, hasAnyPermission } = useUserRole();
   const [openSections, setOpenSections] = useState<string[]>(["Principal", "Gestion Scolaire"]);
+  const hasPermissionData = permissions.length > 0;
 
   const toggleSection = (sectionTitle: string) => {
     setOpenSections(prev =>
@@ -106,22 +166,32 @@ export function AppSidebar() {
     );
   };
 
-  // Filter sections and items based on user roles
+  const canAccessItem = (item: MenuItem) => {
+    if (item.permissions && item.permissions.length > 0 && hasPermissionData) {
+      return hasAnyPermission(item.permissions);
+    }
+    if (item.roles.length === 0) return true;
+    return hasAnyRole(item.roles);
+  };
+
+  const canAccessSection = (section: MenuSection) => {
+    if (section.permissions && section.permissions.length > 0 && hasPermissionData) {
+      return hasAnyPermission(section.permissions);
+    }
+    if (section.roles.length === 0) return true;
+    return hasAnyRole(section.roles);
+  };
+
+  // Filter sections and items based on permissions/roles
   const visibleSections = menuSections
     .map(section => ({
       ...section,
-      items: section.items.filter(item => {
-        if (item.roles.length === 0) return true;
-        return hasAnyRole(item.roles);
-      }),
+      items: section.items.filter(item => canAccessItem(item)),
     }))
     .filter(section => {
       // Show section if it has visible items
       if (section.items.length === 0) return false;
-      // If section has no role requirement, show it
-      if (section.roles.length === 0) return true;
-      // Otherwise check if user has any of the required roles
-      return hasAnyRole(section.roles);
+      return canAccessSection(section);
     });
 
   return (
@@ -130,8 +200,8 @@ export function AppSidebar() {
         <div className="flex items-center justify-between">
           {open && (
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-gradient-primary flex items-center justify-center">
-                <GraduationCap className="h-5 w-5 text-white" />
+              <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <GraduationCap className="h-5 w-5 text-primary" />
               </div>
               <div>
                 <h1 className="font-bold text-lg text-sidebar-foreground">SMART SCHOOL</h1>

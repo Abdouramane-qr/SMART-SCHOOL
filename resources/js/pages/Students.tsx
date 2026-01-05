@@ -47,11 +47,14 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { useQuery } from "@tanstack/react-query";
 import {
   laravelClassesApi,
+  laravelFinanceApi,
+  laravelFinanceSettingsApi,
   laravelStudentsApi,
   normalizeStudentClasse,
   normalizeStudentName,
   normalizeStudentPayments,
 } from "@/services/laravelSchoolApi";
+import { formatAmount, type Currency } from "@/lib/financeUtils";
 
 const StudentDetailsModal = lazy(() =>
   import("@/components/students/StudentDetailsModal").then((module) => ({
@@ -117,9 +120,29 @@ export default function Students() {
   });
 
   const studentsQuery = useQuery({
-    queryKey: ["laravel", "students"],
-    queryFn: () => laravelStudentsApi.getAll(),
+    queryKey: ["laravel", "students", currentPage, searchTerm, selectedClass],
+    queryFn: () =>
+      laravelStudentsApi.getAll({
+        page: currentPage,
+        perPage: ITEMS_PER_PAGE,
+        q: searchTerm || undefined,
+        classId: selectedClass === "all" ? undefined : selectedClass,
+      }),
     staleTime: 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
+  const financeStatsQuery = useQuery({
+    queryKey: ["laravel", "finance-stats"],
+    queryFn: () => laravelFinanceApi.getStats(),
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
+  const financeSettingsQuery = useQuery({
+    queryKey: ["laravel", "finance-settings"],
+    queryFn: () => laravelFinanceSettingsApi.getAll(),
+    staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
 
@@ -153,35 +176,29 @@ export default function Students() {
   const classes = useMemo(() => classesQuery.data || [], [classesQuery.data]);
 
   const stats = useMemo(() => {
-    const totalStudents = students.length;
-    const fullyPaid = students.filter(
-      (student) => student.total_paid >= student.total_due && student.total_due > 0,
-    ).length;
-    const unpaid = students.filter((student) => student.total_paid < student.total_due).length;
+    const totalStudents = studentsQuery.data?.meta?.total ?? students.length;
+    const fullyPaid = financeStatsQuery.data?.studentsUpToDate ?? 0;
+    const unpaid = financeStatsQuery.data?.studentsNotUpToDate ?? 0;
 
     return {
       totalStudents,
       totalPaid: fullyPaid,
       unpaid,
     };
-  }, [students]);
+  }, [students, studentsQuery.data?.meta?.total, financeStatsQuery.data]);
 
-  // Filter and paginate students
-  const filteredStudents = useMemo(() => {
-    return students.filter((student) => {
-      const matchesSearch = student.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.student_id?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesClass = selectedClass === "all" || student.class_name?.includes(selectedClass);
-      return matchesSearch && matchesClass;
-    });
-  }, [students, searchTerm, selectedClass]);
+  const defaultCurrency = useMemo<Currency>(() => {
+    const settings = financeSettingsQuery.data || [];
+    const raw = settings.find((setting) => setting.setting_key === "default_currency")?.setting_value;
+    if (raw === "USD" || raw === "EUR" || raw === "XOF") {
+      return raw;
+    }
+    return "XOF";
+  }, [financeSettingsQuery.data]);
 
-  const totalPages = Math.ceil(filteredStudents.length / ITEMS_PER_PAGE);
-  
-  const paginatedStudents = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredStudents.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredStudents, currentPage]);
+  const totalItems = studentsQuery.data?.meta?.total ?? students.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE));
+  const paginatedStudents = students;
 
   // Reset page when filters change
   useEffect(() => {
@@ -224,11 +241,11 @@ export default function Students() {
     <div className="space-y-6 animate-in fade-in duration-500">
       <PageHeader
         title="Gestion des élèves"
-        description={`${students.length} élève(s) inscrit(s)`}
+        description={`${totalItems} élève(s) inscrit(s)`}
         icon={Users}
         actions={
           <ActionTooltip tooltipKey="addStudent">
-            <Button className="bg-gradient-primary shadow-blue" onClick={() => setIsAddOpen(true)}>
+            <Button className="bg-primary shadow-sm" onClick={() => setIsAddOpen(true)}>
               <UserPlus className="mr-2 h-4 w-4" />
               Nouvel élève
             </Button>
@@ -291,7 +308,7 @@ export default function Students() {
               <SelectContent>
                 <SelectItem value="all">Toutes les classes</SelectItem>
                 {classes.map((cls) => (
-                  <SelectItem key={cls.id} value={`${cls.level} ${cls.name}`}>
+                  <SelectItem key={cls.id} value={String(cls.id)}>
                     {cls.level} {cls.name}
                   </SelectItem>
                 ))}
@@ -333,7 +350,7 @@ export default function Students() {
                       <ActionTooltip tooltipKey="addStudent">
                         <Button
                           size="sm"
-                          className="bg-gradient-primary shadow-blue"
+                          className="bg-primary shadow-sm"
                           onClick={() => setIsAddOpen(true)}
                         >
                           <UserPlus className="mr-2 h-4 w-4" />
@@ -358,10 +375,10 @@ export default function Students() {
                         )}
                       </TableCell>
                       <TableCell className="font-medium text-green-600">
-                        {student.total_paid.toLocaleString()} DH
+                        {formatAmount(student.total_paid, defaultCurrency)}
                       </TableCell>
                       <TableCell className={remaining > 0 ? "font-medium text-red-600" : "text-muted-foreground"}>
-                        {remaining > 0 ? `${remaining.toLocaleString()} DH` : "—"}
+                        {remaining > 0 ? formatAmount(remaining, defaultCurrency) : "—"}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
@@ -422,8 +439,8 @@ export default function Students() {
             <div className="flex items-center justify-between mt-4 pt-4 border-t">
               <p className="text-sm text-muted-foreground">
                 Affichage de {((currentPage - 1) * ITEMS_PER_PAGE) + 1} à{" "}
-                {Math.min(currentPage * ITEMS_PER_PAGE, filteredStudents.length)} sur{" "}
-                {filteredStudents.length} élèves
+                {Math.min(currentPage * ITEMS_PER_PAGE, totalItems)} sur{" "}
+                {totalItems} élèves
               </p>
               <div className="flex items-center gap-2">
                 <Button
@@ -489,6 +506,7 @@ export default function Students() {
               student={selectedStudent}
               isOpen={isDetailsOpen}
               onClose={() => setIsDetailsOpen(false)}
+              currency={defaultCurrency}
             />
             <NewPaymentDialog
               student={selectedStudent}
@@ -497,6 +515,7 @@ export default function Students() {
                 setIsPaymentOpen(false);
                 studentsQuery.refetch();
               }}
+              currency={defaultCurrency}
             />
             <EditStudentDialog
               student={selectedStudent}

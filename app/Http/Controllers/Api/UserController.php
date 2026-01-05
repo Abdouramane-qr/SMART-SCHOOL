@@ -47,10 +47,14 @@ class UserController extends Controller
 
         if (! empty($validated['role'])) {
             $user->assignRole($validated['role']);
+            // Enforce role-scoped permissions only (no per-user overrides).
+            $user->syncPermissions([]);
         }
 
         if (! empty($validated['roles'])) {
             $user->syncRoles($validated['roles']);
+            // Enforce role-scoped permissions only (no per-user overrides).
+            $user->syncPermissions([]);
         }
 
         return new UserResource($user);
@@ -99,12 +103,16 @@ class UserController extends Controller
 
         if (array_key_exists('roles', $validated)) {
             $user->syncRoles($validated['roles'] ?? []);
+            // Enforce role-scoped permissions only (no per-user overrides).
+            $user->syncPermissions([]);
         } elseif (array_key_exists('role', $validated)) {
             if ($validated['role']) {
                 $user->syncRoles([$validated['role']]);
             } else {
                 $user->syncRoles([]);
             }
+            // Enforce role-scoped permissions only (no per-user overrides).
+            $user->syncPermissions([]);
         }
 
         return new UserResource($user);

@@ -30,7 +30,25 @@ composer run dev
 
 ## Filament vs React
 Voir `README_STRUCTURE.md` pour la repartition exacte.
+Vue fonctionnelle complete: `PLATFORM_FEATURES.md`.
+
+## Roles & Permissions (source de verite)
+- Gestion via `spatie/laravel-permission`.
+- Seeder: `database/seeders/RolesAndPermissionsSeeder.php` (roles + permissions + super admin).
+- Front React: controle d'acces par permissions (`/api/me` retourne `roles` + `permissions`).
+- Filament: autorisation par policies (modeles mappes dans `AuthServiceProvider`).
+- Les permissions sont scopees par role (pas de permissions directes utilisateur).
+- Acces Filament reserve a `admin` et `super_admin` (tous les autres roles utilisent React).
+- Normalisation comptes existants: `php artisan users:normalize-permissions --dry-run` puis sans `--dry-run`.
+- Audit roles/permissions (source seeder): `SMART_SCHOOL/AUDIT_ROLES_PERMISSIONS.md`.
+
+## Tests
+- Backend: `php artisan test`
+- Frontend: `npm run test`
+- Les tests backend utilisent `.env.testing` (DB `*_test`). Assurer que la base existe et que l'utilisateur DB a les droits.
 
 ## Notes
 - Migration en cours: pas de nouvelles fonctionnalites sans validation.
 - Parametres locaux: `.env` (utiliser le prefixe `VITE_` pour le front).
+- La devise affichee cote React suit `default_currency` (parametres finance). Codes supportes: `XOF`, `USD`, `EUR`, `DH`.
+- Les APIs notes/absences/emploi du temps se basent par defaut sur l'ecole de l'utilisateur et l'annee scolaire active si aucun filtre n'est fourni.

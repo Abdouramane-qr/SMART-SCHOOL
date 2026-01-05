@@ -25,6 +25,8 @@ import {
   normalizeStudentName,
 } from "@/services/laravelSchoolApi";
 import { Link } from "react-router-dom";
+import { formatAmount, type Currency } from "@/lib/financeUtils";
+import { useFinanceCurrency } from "@/hooks/useFinanceCurrency";
 
 interface ParentDashboardProps {
   userId: string;
@@ -47,6 +49,7 @@ export function ParentDashboard({ userId }: ParentDashboardProps) {
   const [totalPaid, setTotalPaid] = useState(0);
   const [totalDue, setTotalDue] = useState(0);
   const [loading, setLoading] = useState(true);
+  const { defaultCurrency } = useFinanceCurrency();
 
   useEffect(() => {
     fetchParentData();
@@ -192,7 +195,7 @@ export function ParentDashboard({ userId }: ParentDashboardProps) {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Espace Parent</h1>
+          <h1 className="text-[26px] md:text-[28px] font-bold text-foreground">Espace Parent</h1>
           <p className="text-muted-foreground mt-1">
             Suivi de la scolarité de vos enfants
           </p>
@@ -219,13 +222,13 @@ export function ParentDashboard({ userId }: ParentDashboardProps) {
         />
         <StatsCard
           title="Total payé"
-          value={`${totalPaid.toLocaleString()} DH`}
+          value={formatAmount(totalPaid, defaultCurrency as Currency)}
           icon={CreditCard}
-          trend={{ value: `sur ${totalDue.toLocaleString()} DH`, positive: totalPaid >= totalDue }}
+          trend={{ value: `sur ${formatAmount(totalDue, defaultCurrency as Currency)}`, positive: totalPaid >= totalDue }}
         />
         <StatsCard
           title="Reste à payer"
-          value={`${(totalDue - totalPaid).toLocaleString()} DH`}
+          value={formatAmount(totalDue - totalPaid, defaultCurrency as Currency)}
           icon={CreditCard}
           trend={{ value: "", positive: totalPaid >= totalDue }}
         />

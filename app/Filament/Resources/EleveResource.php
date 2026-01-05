@@ -5,8 +5,10 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\EleveResource\Pages;
 use App\Models\Eleve;
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -62,17 +64,69 @@ class EleveResource extends Resource
                     ->required(),
                 Select::make('user_id')
                     ->label('Compte utilisateur')
-                    ->relationship('user', 'email')
-                    ->modifyQueryUsing(
-                        fn ($query) => $query->whereHas('roles', fn ($roleQuery) => $roleQuery->where('name', 'eleve'))
+                    ->relationship(
+                        'user',
+                        'email',
+                        modifyQueryUsing: fn ($query) => $query->whereHas('roles', fn ($roleQuery) => $roleQuery->where('name', 'eleve'))
                     )
                     ->getOptionLabelFromRecordUsing(
                         fn (User $record): string => $record->full_name ?? $record->name ?? $record->email
                     )
+                    ->required(fn (Get $get) => empty($get('account_email')))
+                    ->createOptionForm([
+                        TextInput::make('full_name')
+                            ->label('Nom complet')
+                            ->required()
+                            ->maxLength(150)
+                            ->default(fn (Get $get) => trim(
+                                ($get('../../first_name') ?? '').' '.($get('../../last_name') ?? '')
+                            )),
+                        TextInput::make('email')
+                            ->label('Email')
+                            ->email()
+                            ->required()
+                            ->maxLength(190),
+                        TextInput::make('password')
+                            ->label('Mot de passe')
+                            ->password()
+                            ->required()
+                            ->minLength(8),
+                    ])
+                    ->createOptionUsing(function (array $data): int {
+                        $fullName = trim($data['full_name'] ?? '');
+                        if ($fullName === '') {
+                            $fullName = trim(($data['first_name'] ?? '').' '.($data['last_name'] ?? ''));
+                        }
+
+                        $user = User::create([
+                            'name' => $fullName,
+                            'full_name' => $fullName,
+                            'email' => $data['email'],
+                            'password' => Hash::make($data['password']),
+                        ]);
+
+                        $user->assignRole('eleve');
+
+                        return $user->id;
+                    })
                     ->searchable()
                     ->preload()
-                    ->helperText('Créer d\'abord un utilisateur avec le rôle élève.')
-                    ->required(),
+                    ->helperText('Sélectionnez un compte existant ou laissez vide pour créer automatiquement.')
+                    ->dehydrated(true),
+                TextInput::make('account_email')
+                    ->label('Email du compte')
+                    ->email()
+                    ->maxLength(190)
+                    ->required(fn (Get $get) => empty($get('user_id')))
+                    ->visible(fn (Get $get) => empty($get('user_id')))
+                    ->dehydrated(true),
+                TextInput::make('account_password')
+                    ->label('Mot de passe du compte')
+                    ->password()
+                    ->minLength(8)
+                    ->required(fn (Get $get) => empty($get('user_id')))
+                    ->visible(fn (Get $get) => empty($get('user_id')))
+                    ->dehydrated(true),
             ]);
     }
 
@@ -111,6 +165,21 @@ class EleveResource extends Resource
                 SelectFilter::make('classe_id')
                     ->label('Classe')
                     ->relationship('classe', 'name'),
+                SelectFilter::make('has_user')
+                    ->label('Compte')
+                    ->options([
+                        'with' => 'Avec compte',
+                        'without' => 'Sans compte',
+                    ])
+                    ->query(function ($query, array $data) {
+                        if (($data['value'] ?? null) === 'with') {
+                            return $query->whereNotNull('user_id');
+                        }
+                        if (($data['value'] ?? null) === 'without') {
+                            return $query->whereNull('user_id');
+                        }
+                        return $query;
+                    }),
             ])
             ->actions([
                 Action::make('open')

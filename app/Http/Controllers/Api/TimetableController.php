@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\TimetableResource;
+use App\Models\AcademicYear;
 use App\Models\Classe;
 use App\Models\Timetable;
 use App\Support\CacheKey;
@@ -14,8 +15,14 @@ class TimetableController extends Controller
 {
     public function index(Request $request)
     {
-        $schoolId = $request->integer('school_id');
+        $schoolId = $request->integer('school_id') ?: $request->user()?->school_id;
         $academicYearId = $request->integer('academic_year_id') ?: $request->integer('school_year_id');
+        if (empty($academicYearId) && ! empty($schoolId)) {
+            $academicYearId = AcademicYear::query()
+                ->where('school_id', $schoolId)
+                ->where('is_active', true)
+                ->value('id');
+        }
         $perPage = $request->integer('per_page');
         $page = $request->integer('page') ?: 1;
 
@@ -30,12 +37,12 @@ class TimetableController extends Controller
                 ->orderBy('day_of_week')
                 ->orderBy('start_time');
 
-            if ($request->filled('school_id')) {
-                $query->where('school_id', $request->integer('school_id'));
+            if (! empty($schoolId)) {
+                $query->where('school_id', $schoolId);
             }
 
-            if ($request->filled('academic_year_id') || $request->filled('school_year_id')) {
-                $query->where('academic_year_id', $request->integer('academic_year_id') ?: $request->integer('school_year_id'));
+            if (! empty($academicYearId)) {
+                $query->where('academic_year_id', $academicYearId);
             }
 
             if ($request->filled('class_id')) {

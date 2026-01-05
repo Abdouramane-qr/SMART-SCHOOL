@@ -285,7 +285,7 @@ export default function Absences() {
             <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
               <ActionTooltip tooltipKey="addAbsence">
                 <DialogTrigger asChild>
-                  <Button className="bg-gradient-primary">
+                  <Button className="bg-primary">
                     <Plus className="mr-2 h-4 w-4" />
                     Nouvelle absence
                   </Button>

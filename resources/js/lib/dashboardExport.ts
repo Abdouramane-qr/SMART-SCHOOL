@@ -1,5 +1,6 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { formatAmount, CURRENCIES, type Currency } from "@/lib/financeUtils";
 
 interface DashboardStats {
   totalStudents: number;
@@ -24,74 +25,77 @@ interface ExportData {
   paymentDistribution: PaymentDistribution[];
   monthlyPayments: MonthlyPayment[];
   exportDate: string;
+  currency?: Currency;
 }
 
-const formatAmount = (amount: number) => {
-  return `${amount.toLocaleString('fr-FR')} DH`;
-};
-
 export const exportDashboardToPDF = (data: ExportData) => {
-  const doc = new jsPDF();
+  const doc = new jsPDF({ orientation: "landscape" });
   const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const currency = data.currency ?? "XOF";
+  const currencyLabel = `${CURRENCIES[currency]?.symbol ?? currency} (${currency})`;
   
   // Header
   doc.setFillColor(33, 150, 243);
-  doc.rect(0, 0, pageWidth, 40, 'F');
+  doc.rect(0, 0, pageWidth, 34, "F");
   
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(24);
+  doc.setFontSize(22);
   doc.setFont("helvetica", "bold");
   doc.text("SMART SCHOOL", 14, 20);
   
-  doc.setFontSize(12);
+  doc.setFontSize(11);
   doc.setFont("helvetica", "normal");
-  doc.text(`Rapport du Tableau de Bord - ${data.schoolYear}`, 14, 32);
+  doc.text(`Rapport du Tableau de Bord - ${data.schoolYear}`, 14, 30);
   
   // Date d'export
   doc.setTextColor(60, 60, 60);
   doc.setFontSize(10);
-  doc.text(`Exporté le: ${data.exportDate}`, pageWidth - 14, 50, { align: "right" });
+  doc.text(`Exporté le: ${data.exportDate}`, pageWidth - 14, 44, { align: "right" });
+  doc.text(`Devise: ${currencyLabel}`, pageWidth - 14, 50, { align: "right" });
   
   // Stats Section
   doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(33, 150, 243);
-  doc.text("Statistiques Générales", 14, 60);
+  doc.text("Statistiques Générales", 14, 62);
   
   doc.setDrawColor(33, 150, 243);
-  doc.line(14, 63, pageWidth - 14, 63);
+  doc.line(14, 65, pageWidth - 14, 65);
   
   // Stats Table
   autoTable(doc, {
-    startY: 70,
+    startY: 72,
     head: [["Indicateur", "Valeur"]],
     body: [
       ["Total Élèves", data.stats.totalStudents.toString()],
-      ["Total Recettes", formatAmount(data.stats.totalRevenue)],
-      ["Dépenses", formatAmount(data.stats.totalExpenses)],
-      ["Résultat Net", formatAmount(data.stats.netResult)],
+      ["Total Recettes", formatAmount(data.stats.totalRevenue, currency)],
+      ["Dépenses", formatAmount(data.stats.totalExpenses, currency)],
+      ["Résultat Net", formatAmount(data.stats.netResult, currency)],
     ],
-    theme: "grid",
+    theme: "striped",
     headStyles: {
       fillColor: [33, 150, 243],
       textColor: [255, 255, 255],
       fontStyle: "bold",
     },
     alternateRowStyles: {
-      fillColor: [245, 250, 255],
+      fillColor: [244, 247, 252],
     },
     styles: {
       fontSize: 11,
       cellPadding: 6,
     },
     columnStyles: {
-      0: { fontStyle: "bold", cellWidth: 80 },
-      1: { halign: "right", cellWidth: 80 },
+      0: { fontStyle: "bold", cellWidth: 90 },
+      1: { halign: "right", cellWidth: 90 },
     },
+    tableWidth: "wrap",
+    overflow: "linebreak",
   });
   
   // Payment Distribution Section
-  const currentY = (doc as any).lastAutoTable.finalY + 20;
+  const currentY = (doc as any).lastAutoTable.finalY + 16;
   
   doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
@@ -109,23 +113,25 @@ export const exportDashboardToPDF = (data: ExportData) => {
       const percentage = total > 0 ? ((item.value / total) * 100).toFixed(1) : "0";
       return [item.name, item.value.toString(), `${percentage}%`];
     }),
-    theme: "grid",
+    theme: "striped",
     headStyles: {
       fillColor: [33, 150, 243],
       textColor: [255, 255, 255],
       fontStyle: "bold",
     },
     alternateRowStyles: {
-      fillColor: [245, 250, 255],
+      fillColor: [244, 247, 252],
     },
     styles: {
       fontSize: 11,
       cellPadding: 6,
     },
+    tableWidth: "wrap",
+    overflow: "linebreak",
   });
   
   // Monthly Payments Section
-  const currentY2 = (doc as any).lastAutoTable.finalY + 20;
+  const currentY2 = (doc as any).lastAutoTable.finalY + 16;
   
   doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
@@ -140,24 +146,27 @@ export const exportDashboardToPDF = (data: ExportData) => {
     head: [["Mois", "Montant"]],
     body: data.monthlyPayments.map(item => [
       item.month,
-      formatAmount(item.montant),
+      formatAmount(item.montant, currency),
     ]),
-    theme: "grid",
+    theme: "striped",
     headStyles: {
       fillColor: [33, 150, 243],
       textColor: [255, 255, 255],
       fontStyle: "bold",
     },
     alternateRowStyles: {
-      fillColor: [245, 250, 255],
+      fillColor: [244, 247, 252],
     },
     styles: {
       fontSize: 10,
       cellPadding: 4,
     },
     columnStyles: {
-      1: { halign: "right" },
+      0: { cellWidth: 60 },
+      1: { halign: "right", cellWidth: 90 },
     },
+    tableWidth: "wrap",
+    overflow: "linebreak",
   });
   
   // Footer
@@ -169,7 +178,7 @@ export const exportDashboardToPDF = (data: ExportData) => {
     doc.text(
       `Page ${i} sur ${pageCount} - SMART SCHOOL Gestion Scolaire`,
       pageWidth / 2,
-      doc.internal.pageSize.getHeight() - 10,
+      pageHeight - 10,
       { align: "center" }
     );
   }
@@ -180,19 +189,22 @@ export const exportDashboardToPDF = (data: ExportData) => {
 export const exportDashboardToExcel = (data: ExportData) => {
   // Create CSV content (Excel compatible)
   let csvContent = "\uFEFF"; // BOM for UTF-8
+  const currency = data.currency ?? "XOF";
+  const currencySymbol = CURRENCIES[currency]?.symbol ?? currency;
   
   // Header
   csvContent += "SMART SCHOOL - Rapport du Tableau de Bord\n";
   csvContent += `Année scolaire: ${data.schoolYear}\n`;
   csvContent += `Date d'export: ${data.exportDate}\n\n`;
+  csvContent += `Devise: ${currencySymbol} (${currency})\n\n`;
   
   // Stats
   csvContent += "STATISTIQUES GÉNÉRALES\n";
-  csvContent += "Indicateur;Valeur\n";
+  csvContent += "Indicateur;Valeur;Devise\n";
   csvContent += `Total Élèves;${data.stats.totalStudents}\n`;
-  csvContent += `Total Recettes;${formatAmount(data.stats.totalRevenue)}\n`;
-  csvContent += `Dépenses;${formatAmount(data.stats.totalExpenses)}\n`;
-  csvContent += `Résultat Net;${formatAmount(data.stats.netResult)}\n\n`;
+  csvContent += `Total Recettes;${formatAmount(data.stats.totalRevenue, currency)};${currency}\n`;
+  csvContent += `Dépenses;${formatAmount(data.stats.totalExpenses, currency)};${currency}\n`;
+  csvContent += `Résultat Net;${formatAmount(data.stats.netResult, currency)};${currency}\n\n`;
   
   // Payment Distribution
   csvContent += "RÉPARTITION DES PAIEMENTS\n";
@@ -206,9 +218,9 @@ export const exportDashboardToExcel = (data: ExportData) => {
   
   // Monthly Payments
   csvContent += "ÉVOLUTION MENSUELLE DES PAIEMENTS\n";
-  csvContent += "Mois;Montant\n";
+  csvContent += "Mois;Montant;Devise\n";
   data.monthlyPayments.forEach(item => {
-    csvContent += `${item.month};${formatAmount(item.montant)}\n`;
+    csvContent += `${item.month};${formatAmount(item.montant, currency)};${currency}\n`;
   });
   
   // Create and download file

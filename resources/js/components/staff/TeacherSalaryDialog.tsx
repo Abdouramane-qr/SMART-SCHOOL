@@ -15,6 +15,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Plus, DollarSign } from "lucide-react";
+import { formatAmount, CURRENCIES } from "@/lib/financeUtils";
+import { useFinanceCurrency } from "@/hooks/useFinanceCurrency";
 
 interface TeacherSalaryDialogProps {
   open: boolean;
@@ -26,6 +28,8 @@ export function TeacherSalaryDialog({ open, onOpenChange, teacher }: TeacherSala
   const [salaries, setSalaries] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const { defaultCurrency } = useFinanceCurrency();
+  const currencySymbol = CURRENCIES[defaultCurrency]?.symbol ?? defaultCurrency;
   const [formData, setFormData] = useState({
     month: "",
     year: new Date().getFullYear().toString(),
@@ -100,7 +104,7 @@ export function TeacherSalaryDialog({ open, onOpenChange, teacher }: TeacherSala
     }
   };
 
-  const formatAmount = (amount: number) => `${amount.toLocaleString("fr-FR")} DH`;
+  const formatDisplayAmount = (amount: number) => formatAmount(amount, defaultCurrency);
 
   const months = [
     "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
@@ -120,7 +124,7 @@ export function TeacherSalaryDialog({ open, onOpenChange, teacher }: TeacherSala
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="text-sm text-muted-foreground">
-              Salaire de base: <strong>{formatAmount(teacher?.monthly_salary || 0)}</strong>
+              Salaire de base: <strong>{formatDisplayAmount(teacher?.monthly_salary || 0)}</strong>
             </div>
             <Button onClick={() => setShowForm(!showForm)} size="sm">
               <Plus className="h-4 w-4 mr-1" />
@@ -155,7 +159,7 @@ export function TeacherSalaryDialog({ open, onOpenChange, teacher }: TeacherSala
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Montant brut (DH) *</Label>
+                  <Label>Montant brut ({currencySymbol}) *</Label>
                   <Input
                     type="number"
                     value={formData.amount}
@@ -164,7 +168,7 @@ export function TeacherSalaryDialog({ open, onOpenChange, teacher }: TeacherSala
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Prime (DH)</Label>
+                  <Label>Prime ({currencySymbol})</Label>
                   <Input
                     type="number"
                     value={formData.bonus}
@@ -172,7 +176,7 @@ export function TeacherSalaryDialog({ open, onOpenChange, teacher }: TeacherSala
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Retenues (DH)</Label>
+                  <Label>Retenues ({currencySymbol})</Label>
                   <Input
                     type="number"
                     value={formData.deductions}
@@ -232,15 +236,15 @@ export function TeacherSalaryDialog({ open, onOpenChange, teacher }: TeacherSala
                     <TableCell>
                       <Badge variant="outline">{salary.month} {salary.year}</Badge>
                     </TableCell>
-                    <TableCell>{formatAmount(salary.amount)}</TableCell>
+                    <TableCell>{formatDisplayAmount(salary.amount)}</TableCell>
                     <TableCell className="text-green-600">
-                      +{formatAmount(salary.bonus || 0)}
+                      +{formatDisplayAmount(salary.bonus || 0)}
                     </TableCell>
                     <TableCell className="text-red-600">
-                      -{formatAmount(salary.deductions || 0)}
+                      -{formatDisplayAmount(salary.deductions || 0)}
                     </TableCell>
                     <TableCell className="font-semibold">
-                      {formatAmount(salary.net_amount)}
+                      {formatDisplayAmount(salary.net_amount)}
                     </TableCell>
                     <TableCell>
                       {new Date(salary.payment_date).toLocaleDateString("fr-FR")}

@@ -6,9 +6,12 @@ interface AuthContextType {
   user: LaravelUser | null;
   loading: boolean;
   roles: AppRole[];
+  permissions: string[];
   rolesLoading: boolean;
   hasRole: (role: AppRole) => boolean;
   hasAnyRole: (roles: AppRole[]) => boolean;
+  hasPermission: (permission: string) => boolean;
+  hasAnyPermission: (permissions: string[]) => boolean;
   isAdmin: () => boolean;
   isStaff: () => boolean;
   signOut: () => Promise<void>;
@@ -22,6 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<LaravelUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [roles, setRoles] = useState<AppRole[]>([]);
+  const [permissions, setPermissions] = useState<string[]>([]);
   const [rolesLoading, setRolesLoading] = useState(true);
 
   useEffect(() => {
@@ -42,10 +46,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!mounted) return;
         setUser(currentUser);
         setRoles(normalizeRoles(currentUser?.roles));
+        setPermissions(currentUser?.permissions ?? []);
       } catch (error) {
         if (!mounted) return;
         setUser(null);
         setRoles([]);
+        setPermissions([]);
       } finally {
         if (mounted) {
           setLoading(false);
@@ -72,10 +78,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return role;
       });
       setRoles(mapped as AppRole[]);
+      setPermissions(currentUser?.permissions ?? []);
     } catch (error) {
       if (import.meta.env.DEV) console.error("Error fetching roles:", error);
       setUser(null);
       setRoles([]);
+      setPermissions([]);
     } finally {
       setRolesLoading(false);
     }
@@ -86,6 +94,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const hasAnyRole = (requiredRoles: AppRole[]) => 
     requiredRoles.some(role => roles.includes(role));
 
+  const hasPermission = (permission: string) => permissions.includes(permission);
+
+  const hasAnyPermission = (requiredPermissions: string[]) =>
+    requiredPermissions.some(permission => permissions.includes(permission));
+
   const isAdmin = () => hasRole("admin");
   const isStaff = () => hasAnyRole(["admin", "comptable", "enseignant"]);
 
@@ -93,6 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await laravelAuthApi.logout();
     setUser(null);
     setRoles([]);
+    setPermissions([]);
   };
 
   const refetchRoles = async () => {
@@ -113,9 +127,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         loading,
         roles,
+        permissions,
         rolesLoading,
         hasRole,
         hasAnyRole,
+        hasPermission,
+        hasAnyPermission,
         isAdmin,
         isStaff,
         signOut,

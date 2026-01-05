@@ -4,6 +4,7 @@ import { useUserRole, type AppRole } from "@/hooks/useUserRole";
 interface RoleGuardProps {
   children: ReactNode;
   allowedRoles: AppRole[];
+  allowedPermissions?: string[];
   fallback?: ReactNode;
 }
 
@@ -11,12 +12,17 @@ interface RoleGuardProps {
  * RoleGuard component - Conditionally renders children based on user roles
  * Use this for hiding/showing UI elements based on role
  */
-export function RoleGuard({ children, allowedRoles, fallback = null }: RoleGuardProps) {
-  const { roles, loading, hasAnyRole } = useUserRole();
+export function RoleGuard({ children, allowedRoles, allowedPermissions, fallback = null }: RoleGuardProps) {
+  const { loading, hasAnyRole, hasAnyPermission } = useUserRole();
 
   // While loading, don't render anything to prevent flash
   if (loading) {
     return null;
+  }
+
+  // If user has any of the allowed permissions, render children
+  if (allowedPermissions && allowedPermissions.length > 0 && hasAnyPermission(allowedPermissions)) {
+    return <>{children}</>;
   }
 
   // If user has any of the allowed roles, render children
@@ -54,4 +60,3 @@ export function useRoleCheck() {
     canAccessParent,
   };
 }
-

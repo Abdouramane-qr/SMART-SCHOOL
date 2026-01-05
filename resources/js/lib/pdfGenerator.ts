@@ -1,5 +1,6 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { formatAmount, type Currency } from "@/lib/financeUtils";
 
 interface PaymentData {
   receiptNumber: string;
@@ -10,10 +11,12 @@ interface PaymentData {
   paidAmount: number;
   paymentDate: string;
   notes?: string;
+  currency?: Currency;
 }
 
 export const generatePaymentReceipt = (payment: PaymentData) => {
   const doc = new jsPDF();
+  const currency = payment.currency ?? "XOF";
   
   // Header
   doc.setFontSize(20);
@@ -58,9 +61,9 @@ export const generatePaymentReceipt = (payment: PaymentData) => {
     body: [
       [
         payment.paymentType,
-        `${payment.amount.toLocaleString()} DH`,
-        `${payment.paidAmount.toLocaleString()} DH`,
-        `${(payment.amount - payment.paidAmount).toLocaleString()} DH`,
+        formatAmount(payment.amount, currency),
+        formatAmount(payment.paidAmount, currency),
+        formatAmount(payment.amount - payment.paidAmount, currency),
       ],
     ],
     theme: "striped",
@@ -86,7 +89,7 @@ export const generatePaymentReceipt = (payment: PaymentData) => {
   doc.text("TOTAL PAYÉ:", 25, finalY + 22);
   doc.setFontSize(16);
   doc.setTextColor(34, 197, 94); // Green color
-  doc.text(`${payment.paidAmount.toLocaleString()} DH`, 170, finalY + 22, { align: "right" });
+  doc.text(formatAmount(payment.paidAmount, currency), 170, finalY + 22, { align: "right" });
   
   // Notes
   if (payment.notes) {

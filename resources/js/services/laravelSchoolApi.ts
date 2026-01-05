@@ -296,8 +296,27 @@ export const laravelSubjectsApi = {
 };
 
 export const laravelStudentsApi = {
-  getAll: async (): Promise<LaravelListResponse<LaravelEleve>> => {
-    const payload = await apiRequest<any>("/eleves");
+  getAll: async (params?: {
+    page?: number;
+    perPage?: number;
+    q?: string;
+    classId?: string | number;
+  }): Promise<LaravelListResponse<LaravelEleve>> => {
+    const searchParams = new URLSearchParams();
+    if (params?.page) {
+      searchParams.set("page", String(params.page));
+    }
+    if (params?.perPage) {
+      searchParams.set("per_page", String(params.perPage));
+    }
+    if (params?.q) {
+      searchParams.set("q", params.q);
+    }
+    if (params?.classId && params.classId !== "all") {
+      searchParams.set("class_id", String(params.classId));
+    }
+    const query = searchParams.toString();
+    const payload = await apiRequest<any>(`/eleves${query ? `?${query}` : ""}`);
     const { data, meta } = unwrapData<LaravelEleve[]>(payload);
     return { items: data || [], meta };
   },

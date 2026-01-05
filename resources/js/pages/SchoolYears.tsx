@@ -71,7 +71,7 @@ export default function SchoolYears() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Années scolaires</h1>
+          <h1 className="text-[26px] md:text-[28px] font-bold text-foreground">Années scolaires</h1>
           <p className="text-muted-foreground mt-1">
             {totalYears} année{totalYears > 1 ? "s" : ""} enregistrée{totalYears > 1 ? "s" : ""}
           </p>

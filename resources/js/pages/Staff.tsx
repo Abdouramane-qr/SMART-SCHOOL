@@ -20,6 +20,8 @@ import { DeleteTeacherDialog } from "@/components/staff/DeleteTeacherDialog";
 import { TeacherSalaryDialog } from "@/components/staff/TeacherSalaryDialog";
 import { TeacherAuditModal } from "@/components/staff/TeacherAuditModal";
 import { ActionTooltip } from "@/components/ui/ActionTooltip";
+import { formatAmount, CURRENCIES } from "@/lib/financeUtils";
+import { useFinanceCurrency } from "@/hooks/useFinanceCurrency";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -37,6 +39,7 @@ export default function Staff() {
   const [salaryDialogOpen, setSalaryDialogOpen] = useState(false);
   const [auditModalOpen, setAuditModalOpen] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState<any>(null);
+  const { defaultCurrency } = useFinanceCurrency();
 
   useEffect(() => {
     fetchTeachers();
@@ -66,9 +69,8 @@ export default function Staff() {
     }
   };
 
-  const formatAmount = (amount: number) => {
-    return `${amount.toLocaleString('fr-FR')} DH`;
-  };
+  const formatDisplayAmount = (amount: number) => formatAmount(amount, defaultCurrency);
+  const currencySymbol = CURRENCIES[defaultCurrency]?.symbol ?? defaultCurrency;
 
   // Pagination
   const totalPages = Math.ceil(filteredTeachers.length / ITEMS_PER_PAGE);
@@ -107,13 +109,13 @@ export default function Staff() {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Gestion du Personnel</h1>
+          <h1 className="text-[26px] md:text-[28px] font-bold text-foreground">Gestion du Personnel</h1>
           <p className="text-muted-foreground mt-1">
             {teachers.length} enseignant(s) enregistré(s)
           </p>
         </div>
         <ActionTooltip tooltipKey="addTeacher">
-          <Button className="bg-gradient-primary shadow-blue" onClick={() => setAddDialogOpen(true)}>
+          <Button className="bg-primary shadow-sm" onClick={() => setAddDialogOpen(true)}>
             <UserPlus className="mr-2 h-4 w-4" />
             Nouvel enseignant
           </Button>
@@ -140,7 +142,7 @@ export default function Staff() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatAmount(
+              {formatDisplayAmount(
                 teachers.reduce((sum, t) => sum + parseFloat(t.monthly_salary || 0), 0)
               )}
             </div>
@@ -157,11 +159,11 @@ export default function Staff() {
           <CardContent>
             <div className="text-2xl font-bold">
               {teachers.length > 0
-                ? formatAmount(
+                ? formatDisplayAmount(
                     teachers.reduce((sum, t) => sum + parseFloat(t.monthly_salary || 0), 0) /
                       teachers.length
                   )
-                : formatAmount(0)}
+                : formatDisplayAmount(0)}
             </div>
           </CardContent>
         </Card>
@@ -190,7 +192,7 @@ export default function Staff() {
                 <TableHead>Email</TableHead>
                 <TableHead>Téléphone</TableHead>
                 <TableHead>Spécialisation</TableHead>
-                <TableHead>Salaire mensuel</TableHead>
+                <TableHead>Salaire mensuel ({currencySymbol})</TableHead>
                 <TableHead>Date d'embauche</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
@@ -214,7 +216,7 @@ export default function Staff() {
                       <Badge variant="secondary">{teacher.specialization || "N/A"}</Badge>
                     </TableCell>
                     <TableCell className="font-semibold text-primary">
-                      {formatAmount(parseFloat(teacher.monthly_salary || 0))}
+                      {formatDisplayAmount(parseFloat(teacher.monthly_salary || 0))}
                     </TableCell>
                     <TableCell>
                       {teacher.hire_date

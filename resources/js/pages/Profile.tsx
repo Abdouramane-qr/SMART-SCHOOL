@@ -142,7 +142,7 @@ export default function Profile() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground">Mon Profil</h1>
+        <h1 className="text-2xl md:text-[26px] md:text-[28px] font-bold text-foreground">Mon Profil</h1>
         <p className="text-muted-foreground mt-1">Gérez vos informations personnelles</p>
       </div>
 
@@ -153,7 +153,7 @@ export default function Profile() {
             <div className="mx-auto mb-4">
               <Avatar className="h-24 w-24">
                 <AvatarImage src={profile?.avatar_url || undefined} />
-                <AvatarFallback className="bg-gradient-primary text-primary-foreground text-2xl font-bold">
+                <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-bold">
                   {getInitials()}
                 </AvatarFallback>
               </Avatar>
@@ -254,7 +254,7 @@ export default function Profile() {
               </div>
 
               <div className="flex justify-end">
-                <Button type="submit" disabled={saving} className="bg-gradient-primary">
+                <Button type="submit" disabled={saving} className="bg-primary">
                   {saving ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />

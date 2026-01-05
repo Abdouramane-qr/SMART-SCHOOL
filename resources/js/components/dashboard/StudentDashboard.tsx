@@ -26,6 +26,8 @@ import {
   normalizeStudentName,
 } from "@/services/laravelSchoolApi";
 import { Link } from "react-router-dom";
+import { formatAmount, type Currency } from "@/lib/financeUtils";
+import { useFinanceCurrency } from "@/hooks/useFinanceCurrency";
 
 const DAYS = ["", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
 
@@ -48,6 +50,7 @@ export function StudentDashboard({ userId }: StudentDashboardProps) {
   const [absences, setAbsences] = useState<any[]>([]);
   const [subjectStats, setSubjectStats] = useState<GradeWithTrend[]>([]);
   const [loading, setLoading] = useState(true);
+  const { defaultCurrency } = useFinanceCurrency();
 
   useEffect(() => {
     fetchStudentData();
@@ -155,7 +158,7 @@ export function StudentDashboard({ userId }: StudentDashboardProps) {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">
+          <h1 className="text-[26px] md:text-[28px] font-bold text-foreground">
             Bienvenue, {studentData ? normalizeStudentName(studentData) || "Élève" : "Élève"}
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -365,8 +368,8 @@ export function StudentDashboard({ userId }: StudentDashboardProps) {
             </div>
             <Progress value={paymentProgress} className="h-2" />
             <div className="flex justify-between mt-2 text-sm">
-              <span>Payé: {totalPaid.toLocaleString()} DH</span>
-              <span>Total: {totalDue.toLocaleString()} DH</span>
+              <span>Payé: {formatAmount(totalPaid, defaultCurrency as Currency)}</span>
+              <span>Total: {formatAmount(totalDue, defaultCurrency as Currency)}</span>
             </div>
           </div>
           
@@ -384,11 +387,13 @@ export function StudentDashboard({ userId }: StudentDashboardProps) {
                   <div>
                     <p className="font-medium capitalize">{payment.payment_type}</p>
                     <p className="text-sm text-muted-foreground">
-                      Dû: {payment.amount.toLocaleString()} DH
+                      Dû: {formatAmount(Number(payment.amount || 0), defaultCurrency as Currency)}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium">{(payment.paid_amount || 0).toLocaleString()} DH</p>
+                    <p className="font-medium">
+                      {formatAmount(Number(payment.paid_amount || 0), defaultCurrency as Currency)}
+                    </p>
                     <Badge
                       variant={
                         payment.status === "paye"

@@ -132,7 +132,7 @@ export function AddGradeDialog({ onSuccess }: AddGradeDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-gradient-primary shadow-blue">
+        <Button className="bg-primary shadow-sm">
           <Plus className="mr-2 h-4 w-4" />
           Nouvelle note
         </Button>

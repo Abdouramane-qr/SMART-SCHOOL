@@ -52,8 +52,14 @@ export default function Finances() {
   const [selectedCurrency, setSelectedCurrency] = useState<Currency>("XOF");
   const [financeSettings, setFinanceSettings] = useState<Record<string, string>>({});
 
-  const { hasRole, hasAnyRole } = useUserRole();
-  const canEdit = hasAnyRole(["admin", "comptable"]);
+  const { hasAnyRole, hasAnyPermission } = useUserRole();
+  const canEdit =
+    hasAnyPermission([
+      "paiement.create",
+      "paiement.update",
+      "expense.create",
+      "expense.update",
+    ]) || hasAnyRole(["admin", "comptable"]);
 
   useEffect(() => {
     fetchFinancialData();
@@ -113,6 +119,7 @@ export default function Finances() {
         paidAmount: parseFloat(payment.paid_amount?.toString() || "0"),
         paymentDate: payment.payment_date || new Date().toISOString(),
         notes: payment.notes,
+        currency: (payment.currency || selectedCurrency) as Currency,
       });
       toast.success("Reçu généré avec succès");
     } catch (error) {
@@ -149,7 +156,7 @@ export default function Finances() {
     <div className="space-y-6 animate-in fade-in duration-500">
       <PageHeader
         title="Comptabilité"
-        description="Suivi des revenus et dépenses • Multi-devises: XOF, USD, EUR"
+        description={`Suivi des revenus et dépenses • Multi-devises: ${Object.keys(CURRENCIES).join(", ")}`}
         icon={DollarSign}
         actions={
           <>

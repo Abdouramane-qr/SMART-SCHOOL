@@ -53,7 +53,7 @@ export default function Subjects() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Gestion des matières</h1>
+          <h1 className="text-[26px] md:text-[28px] font-bold text-foreground">Gestion des matières</h1>
           <p className="text-muted-foreground mt-1">
             {totalSubjects} matière{totalSubjects > 1 ? "s" : ""} enregistrée{totalSubjects > 1 ? "s" : ""}
           </p>

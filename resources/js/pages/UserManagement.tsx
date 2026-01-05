@@ -150,13 +150,13 @@ export default function UserManagement() {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Gestion des Utilisateurs</h1>
+          <h1 className="text-[26px] md:text-[28px] font-bold text-foreground">Gestion des Utilisateurs</h1>
           <p className="text-muted-foreground mt-1">
             Gérez les rôles et permissions des utilisateurs
           </p>
         </div>
         <ActionTooltip tooltipKey="addUser">
-          <Button className="bg-gradient-primary shadow-blue" onClick={() => setIsAddUserOpen(true)}>
+          <Button className="bg-primary shadow-sm" onClick={() => setIsAddUserOpen(true)}>
             <UserPlus className="mr-2 h-4 w-4" />
             Nouvel utilisateur
           </Button>

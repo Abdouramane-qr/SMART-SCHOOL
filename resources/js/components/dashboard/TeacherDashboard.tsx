@@ -144,7 +144,7 @@ export function TeacherDashboard({ userId }: TeacherDashboardProps) {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">
+          <h1 className="text-[26px] md:text-[28px] font-bold text-foreground">
             Bienvenue, {teacherData?.profiles?.full_name || "Enseignant"}
           </h1>
           <p className="text-muted-foreground mt-1">

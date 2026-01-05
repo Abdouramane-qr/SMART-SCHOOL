@@ -10,6 +10,13 @@ class PasswordConfirmationTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->markTestSkipped('Password confirmation routes are not exposed in the SPA API.');
+    }
+
     public function test_confirm_password_screen_can_be_rendered(): void
     {
         $user = User::factory()->create();

@@ -136,7 +136,7 @@ export default function Assets() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Gestion des Actifs</h1>
+          <h1 className="text-[26px] md:text-[28px] font-bold tracking-tight">Gestion des Actifs</h1>
           <p className="text-muted-foreground">
             Inventaire et suivi des équipements de l'établissement
           </p>

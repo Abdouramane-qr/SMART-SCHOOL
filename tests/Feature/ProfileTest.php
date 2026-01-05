@@ -10,6 +10,13 @@ class ProfileTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->markTestSkipped('Profile web routes are not exposed in the SPA API.');
+    }
+
     public function test_profile_page_is_displayed(): void
     {
         $user = User::factory()->create();

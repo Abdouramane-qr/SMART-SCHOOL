@@ -31,7 +31,23 @@ class PaiementController extends Controller
 
         $result = $cache->remember($key, now()->addMinutes(5), function () use ($request, $perPage, $status, $method) {
             $query = Paiement::query()
-                ->with(['eleve', 'school'])
+                ->select([
+                    'paiements.id',
+                    'paiements.school_id',
+                    'paiements.eleve_id',
+                    'paiements.amount',
+                    'paiements.paid_amount',
+                    'paiements.payment_date',
+                    'paiements.due_date',
+                    'paiements.method',
+                    'paiements.payment_type',
+                    'paiements.status',
+                    'paiements.notes',
+                    'paiements.receipt_number',
+                    'paiements.created_at',
+                    'paiements.updated_at',
+                ])
+                ->with(['eleve:id,first_name,last_name,full_name,student_id'])
                 ->orderByDesc('payment_date')
                 ->orderByDesc('id');
 
