@@ -4,19 +4,20 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\AssetResource\Pages;
 use App\Models\Asset;
+use App\Support\StatusMap;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Table;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
 
 class AssetResource extends Resource
 {
@@ -59,12 +60,11 @@ class AssetResource extends Resource
                 Select::make('status')
                     ->label('Statut')
                     ->options([
-                        'neuf' => 'Neuf',
-                        'bon' => 'Bon état',
-                        'usage' => 'Usagé',
-                        'maintenance' => 'Maintenance',
-                        'hors_service' => 'Hors service',
+                        'actif' => 'Actif',
+                        'panne' => 'En panne',
+                        'vendu' => 'Vendu',
                     ])
+                    ->default('actif')
                     ->required(),
                 DatePicker::make('acquisition_date')
                     ->label('Date d\'acquisition'),
@@ -117,11 +117,9 @@ class AssetResource extends Resource
                     ->label('Statut')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'neuf' => 'success',
-                        'bon' => 'info',
-                        'usage' => 'warning',
-                        'maintenance' => 'warning',
-                        'hors_service' => 'danger',
+                        'actif' => StatusMap::filament('success'),
+                        'panne' => StatusMap::filament('warning'),
+                        'vendu' => 'gray',
                         default => 'gray',
                     }),
                 TextColumn::make('current_value')
@@ -155,11 +153,9 @@ class AssetResource extends Resource
                 SelectFilter::make('status')
                     ->label('Statut')
                     ->options([
-                        'neuf' => 'Neuf',
-                        'bon' => 'Bon état',
-                        'usage' => 'Usagé',
-                        'maintenance' => 'Maintenance',
-                        'hors_service' => 'Hors service',
+                        'actif' => 'Actif',
+                        'panne' => 'En panne',
+                        'vendu' => 'Vendu',
                     ]),
             ])
             ->actions([

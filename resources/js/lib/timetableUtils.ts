@@ -155,14 +155,14 @@ export function checkRoomConflict(
  * Couleurs pour les matières dans l'emploi du temps
  */
 export const SUBJECT_COLORS = [
-  "bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700",
-  "bg-green-100 dark:bg-green-900/30 border-green-300 dark:border-green-700",
-  "bg-purple-100 dark:bg-purple-900/30 border-purple-300 dark:border-purple-700",
-  "bg-orange-100 dark:bg-orange-900/30 border-orange-300 dark:border-orange-700",
-  "bg-pink-100 dark:bg-pink-900/30 border-pink-300 dark:border-pink-700",
-  "bg-cyan-100 dark:bg-cyan-900/30 border-cyan-300 dark:border-cyan-700",
-  "bg-yellow-100 dark:bg-yellow-900/30 border-yellow-300 dark:border-yellow-700",
-  "bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-700",
+  "bg-surface border-brand-neutral",
+  "bg-background border-brand-neutral",
+  "bg-primary/10 border-primary/30",
+  "bg-primary/5 border-primary/20",
+  "bg-brand-neutral/10 border-brand-neutral/30",
+  "bg-brand-neutral/5 border-brand-neutral/20",
+  "bg-surface border-brand-neutral",
+  "bg-background border-brand-neutral",
 ];
 
 export function getSubjectColor(subjectId: string | number): string {

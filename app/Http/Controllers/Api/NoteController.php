@@ -100,14 +100,36 @@ class NoteController extends Controller
             'eleve_id' => ['required', 'integer', 'exists:eleves,id'],
             'matiere_id' => ['required', 'integer', 'exists:matieres,id'],
             'class_id' => ['nullable', 'integer', 'exists:classes,id'],
-            'academic_year_id' => ['required', 'integer', 'exists:academic_years,id'],
+            'academic_year_id' => ['nullable', 'integer', 'exists:academic_years,id'],
             'value' => ['required', 'numeric'],
             'term' => ['required', 'string', 'max:50'],
             'grade_type' => ['nullable', 'string', 'max:50'],
             'weight' => ['nullable', 'numeric'],
             'description' => ['nullable', 'string'],
             'evaluation_date' => ['nullable', 'date'],
+        ], [
+            'eleve_id.required' => "L'eleve est obligatoire.",
+            'matiere_id.required' => 'La matiere est obligatoire.',
+            'value.required' => 'La note est obligatoire.',
+            'value.numeric' => 'La note doit etre un nombre.',
+            'term.required' => 'La periode est obligatoire.',
         ]);
+
+        if (empty($validated['academic_year_id'])) {
+            if (! empty($validated['class_id'])) {
+                $classe = \App\Models\Classe::query()->find($validated['class_id']);
+                if ($classe) {
+                    $validated['academic_year_id'] = $classe->academic_year_id;
+                }
+            }
+
+            if (empty($validated['academic_year_id'])) {
+                $eleve = \App\Models\Eleve::query()->find($validated['eleve_id']);
+                if ($eleve) {
+                    $validated['academic_year_id'] = $eleve->classe?->academic_year_id;
+                }
+            }
+        }
 
         if (empty($validated['school_id'])) {
             if (! empty($validated['class_id'])) {
@@ -123,6 +145,13 @@ class NoteController extends Controller
                     $validated['school_id'] = $eleve->school_id;
                 }
             }
+        }
+
+        if (empty($validated['academic_year_id']) && ! empty($validated['school_id'])) {
+            $validated['academic_year_id'] = AcademicYear::query()
+                ->where('school_id', $validated['school_id'])
+                ->where('is_active', true)
+                ->value('id');
         }
 
         $note = Note::create($validated);
@@ -174,6 +203,8 @@ class NoteController extends Controller
             'weight' => ['sometimes', 'nullable', 'numeric'],
             'description' => ['sometimes', 'nullable', 'string'],
             'evaluation_date' => ['sometimes', 'nullable', 'date'],
+        ], [
+            'value.numeric' => 'La note doit etre un nombre.',
         ]);
 
         $note->update($validated);

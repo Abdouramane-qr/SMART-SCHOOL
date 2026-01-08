@@ -22,6 +22,7 @@ import { TeacherAuditModal } from "@/components/staff/TeacherAuditModal";
 import { ActionTooltip } from "@/components/ui/ActionTooltip";
 import { formatAmount, CURRENCIES } from "@/lib/financeUtils";
 import { useFinanceCurrency } from "@/hooks/useFinanceCurrency";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -99,8 +100,18 @@ export default function Staff() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="space-y-6 animate-in fade-in duration-500">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-56" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <Skeleton key={index} className="h-24 w-full" />
+          ))}
+        </div>
+        <Skeleton className="h-10 w-64" />
+        <Skeleton className="h-64 w-full" />
       </div>
     );
   }
@@ -115,7 +126,7 @@ export default function Staff() {
           </p>
         </div>
         <ActionTooltip tooltipKey="addTeacher">
-          <Button className="bg-primary shadow-sm" onClick={() => setAddDialogOpen(true)}>
+          <Button onClick={() => setAddDialogOpen(true)}>
             <UserPlus className="mr-2 h-4 w-4" />
             Nouvel enseignant
           </Button>

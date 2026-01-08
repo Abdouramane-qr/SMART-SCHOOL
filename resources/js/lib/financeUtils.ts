@@ -1,3 +1,5 @@
+import statusMap from "../../shared/statuses.json";
+
 /**
  * Utilitaires pour les calculs financiers multi-devises
  */
@@ -98,7 +100,7 @@ export const PAYMENT_TYPES = {
  * Statuts de paiement
  */
 export const PAYMENT_STATUS = {
-  paye: { label: "Payé", color: "bg-green-500" },
-  partiel: { label: "Partiel", color: "bg-yellow-500" },
-  en_retard: { label: "En retard", color: "bg-red-500" },
+  paye: { label: "Payé", variant: statusMap.success.reactVariant },
+  partiel: { label: "Partiel", variant: statusMap.warning.reactVariant },
+  en_retard: { label: "En retard", variant: statusMap.warning.reactVariant },
 } as const;

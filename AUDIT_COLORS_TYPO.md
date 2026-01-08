@@ -3,19 +3,17 @@
 Date: 2026-01-06  
 Objectif: vérifier l’alignement React / Filament et appliquer une base visuelle unique.
 
-## Constat initial (avant alignement)
-- **Police React**: mix de deux polices (`Source Sans 3` + `Fraunces` via `.font-display`).
-- **Police Filament**: Inter (par défaut Filament).
-- **Couleurs React**: palette bleue/cyan personnalisée non alignée sur Indigo/Cyan/Emerald/Amber/Red/Slate.
-- **Thème Filament**: mode sombre par défaut, couleur primaire Amber.
-- **Effets**: gradients + ombres marquées dans plusieurs composants.
+## Constat actuel
+- **Police React**: `Source Sans 3` définie dans `resources/css/app.css`.
+- **Police Filament**: `Source Sans 3` configurée côté Panel + thème Filament aligné.
+- **Couleurs React**: palette POPSPACE appliquée via variables CSS (`primary`, `background`, `neutral`, `white`) + `surface`.
+- **Couleurs Filament**: palette primaire + neutres alignés sur POPSPACE, états success/warning mappés sur la palette.
+- **Effets**: gradients supprimés des dashboards, ombres et fonds simplifiés.
 
-## Divergences restantes (après alignement)
-- **Titres métier**: quelques indicateurs (ex: valeur moyenne sur dashboard) restent en `text-3xl` par choix de lisibilité.
+## Divergences restantes
+- **Destructive**: rouge conservé pour suppression/critique uniquement (exception volontaire).
+- **Lisibilité**: `muted-foreground` ajusté pour contraste (valeur hors palette strictement POPSPACE).
 
 ## Alignements appliqués
-- **Palette unique**: Indigo/Cyan/Emerald/Amber/Red + Neutral Slate, fond Slate 50.
-- **Typographie unique**: `Source Sans 3` pour React + Filament.
-- **Titres**: H1 standardisés (26–28px) sur les pages React.
-- **Effets**: gradients retirés et ombres réduites (`shadow-sm`/`shadow-md`).
-- **Filament**: thème clair par défaut + couleurs alignées + CSS de thème (fond + radius).
+- **Tokens CSS**: POPSPACE centralisée dans `resources/css/app.css` + `tailwind.config.js`.
+- **Filament**: thème admin aligné (couleurs + typographie) via `resources/css/filament/admin/theme.css` + `AdminPanelProvider`.

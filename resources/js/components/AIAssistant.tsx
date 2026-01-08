@@ -34,11 +34,11 @@ const ROLE_LABELS: Record<AppRole, string> = {
 };
 
 const ROLE_COLORS: Record<AppRole, string> = {
-  admin: "bg-red-500",
-  comptable: "bg-blue-500",
-  enseignant: "bg-green-500",
-  eleve: "bg-yellow-500",
-  parent: "bg-purple-500",
+  admin: "bg-primary",
+  comptable: "bg-primary",
+  enseignant: "bg-primary",
+  eleve: "bg-primary",
+  parent: "bg-primary",
 };
 
 const QUICK_PROMPTS: Record<AppRole, string[]> = {
@@ -171,8 +171,8 @@ export function AIAssistant() {
         >
           <Bot className="h-6 w-6" />
           <span className="absolute -top-1 -right-1 flex h-4 w-4">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-4 w-4 bg-green-500"></span>
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary/40 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-4 w-4 bg-primary"></span>
           </span>
         </button>
       )}

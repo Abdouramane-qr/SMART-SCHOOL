@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PaiementResource;
-use App\Models\Eleve;
 use App\Models\Paiement;
 use App\Support\CacheKey;
+use App\Services\FinanceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
@@ -92,8 +92,8 @@ class PaiementController extends Controller
         $validated = $request->validate([
             'school_id' => ['nullable', 'integer', 'exists:schools,id'],
             'eleve_id' => ['required', 'integer', 'exists:eleves,id'],
-            'amount' => ['nullable', 'numeric', 'min:0'],
-            'paid_amount' => ['nullable', 'numeric', 'min:0'],
+            'amount' => ['required_without:paid_amount', 'numeric', 'min:0'],
+            'paid_amount' => ['required_without:amount', 'numeric', 'min:0'],
             'payment_date' => ['required', 'date'],
             'due_date' => ['nullable', 'date'],
             'method' => ['nullable', 'string', 'max:50'],
@@ -101,19 +101,16 @@ class PaiementController extends Controller
             'status' => ['nullable', 'string', 'max:50'],
             'notes' => ['nullable', 'string'],
             'receipt_number' => ['nullable', 'string', 'max:100'],
+        ], [
+            'eleve_id.required' => "L'eleve est obligatoire.",
+            'payment_date.required' => 'La date de paiement est obligatoire.',
+            'amount.required_without' => 'Renseignez le montant ou le montant paye.',
+            'paid_amount.required_without' => 'Renseignez le montant paye ou le montant total.',
+            'amount.min' => 'Le montant doit etre positif.',
+            'paid_amount.min' => 'Le montant paye doit etre positif.',
         ]);
 
-        $eleve = Eleve::findOrFail($validated['eleve_id']);
-        $payload = $validated;
-        $payload['school_id'] = $payload['school_id'] ?? $eleve->school_id;
-        $payload['method'] = $payload['method'] ?? $payload['payment_type'];
-
-        if (! array_key_exists('amount', $payload) || $payload['amount'] === null) {
-            $payload['amount'] = $payload['paid_amount'] ?? 0;
-        }
-
-        $paiement = Paiement::create($payload);
-        Cache::tags(CacheKey::tags($paiement->school_id, $eleve->classe?->academic_year_id))->flush();
+        $paiement = app(FinanceService::class)->createPayment($validated);
 
         return new PaiementResource($paiement->load(['eleve', 'school']));
     }
@@ -153,24 +150,12 @@ class PaiementController extends Controller
             'status' => ['sometimes', 'nullable', 'string', 'max:50'],
             'notes' => ['sometimes', 'nullable', 'string'],
             'receipt_number' => ['sometimes', 'nullable', 'string', 'max:100'],
+        ], [
+            'amount.min' => 'Le montant doit etre positif.',
+            'paid_amount.min' => 'Le montant paye doit etre positif.',
         ]);
 
-        if (array_key_exists('eleve_id', $validated) && empty($validated['school_id'])) {
-            $eleve = Eleve::find($validated['eleve_id']);
-            $validated['school_id'] = $eleve?->school_id;
-        }
-
-        if (array_key_exists('method', $validated) && empty($validated['method']) && ! empty($validated['payment_type'])) {
-            $validated['method'] = $validated['payment_type'];
-        }
-
-        if (array_key_exists('amount', $validated) && $validated['amount'] === null && isset($validated['paid_amount'])) {
-            $validated['amount'] = $validated['paid_amount'];
-        }
-
-        $paiement->update($validated);
-        $academicYearId = $paiement->eleve?->classe?->academic_year_id;
-        Cache::tags(CacheKey::tags($paiement->school_id, $academicYearId))->flush();
+        $paiement = app(FinanceService::class)->updatePayment($paiement, $validated);
 
         return new PaiementResource($paiement->load(['eleve', 'school']));
     }
@@ -180,11 +165,7 @@ class PaiementController extends Controller
      */
     public function destroy(Paiement $paiement)
     {
-        $schoolId = $paiement->school_id;
-        $academicYearId = $paiement->eleve?->classe?->academic_year_id;
-        $paiement->delete();
-
-        Cache::tags(CacheKey::tags($schoolId, $academicYearId))->flush();
+        app(FinanceService::class)->deletePayment($paiement);
 
         return response()->noContent();
     }

@@ -171,7 +171,7 @@ export default function Classes() {
                 </div>
 
                 {/* Progress bar */}
-                <div className="w-full bg-muted rounded-full h-2">
+                <div className="w-full bg-surface rounded-full h-2">
                   <div
                     className="bg-primary h-2 rounded-full transition-all"
                     style={{

@@ -20,13 +20,13 @@ export const generateStudentBulletin = (data: StudentBulletinData) => {
   const doc = new jsPDF();
   
   // Header with gradient background simulation
-  doc.setFillColor(30, 64, 175); // Primary blue
+  doc.setFillColor(18, 115, 211); // Primary color
   doc.rect(0, 0, 210, 45, "F");
   
   // School logo area
   doc.setFillColor(255, 255, 255);
   doc.circle(25, 22, 12, "F");
-  doc.setTextColor(30, 64, 175);
+  doc.setTextColor(18, 115, 211);
   doc.setFontSize(14);
   doc.setFont("helvetica", "bold");
   doc.text("SS", 25, 26, { align: "center" });
@@ -48,7 +48,7 @@ export const generateStudentBulletin = (data: StudentBulletinData) => {
   doc.setFont("helvetica", "bold");
   doc.text("INFORMATIONS DE L'ÉLÈVE", 20, 55);
   
-  doc.setDrawColor(30, 64, 175);
+  doc.setDrawColor(18, 115, 211);
   doc.setLineWidth(0.5);
   doc.line(20, 58, 190, 58);
   
@@ -96,7 +96,7 @@ export const generateStudentBulletin = (data: StudentBulletinData) => {
     body: tableData,
     theme: "grid",
     headStyles: {
-      fillColor: [30, 64, 175],
+      fillColor: [18, 115, 211],
       textColor: 255,
       fontSize: 10,
       fontStyle: "bold",
@@ -123,7 +123,7 @@ export const generateStudentBulletin = (data: StudentBulletinData) => {
   const finalY = (doc as any).lastAutoTable.finalY || 160;
   
   // Average box
-  doc.setFillColor(30, 64, 175);
+  doc.setFillColor(18, 115, 211);
   doc.rect(20, finalY + 10, 170, 30, "F");
   
   doc.setTextColor(255, 255, 255);

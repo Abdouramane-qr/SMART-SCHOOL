@@ -64,6 +64,7 @@ class Note extends Model
                 if ($eleve) {
                     $note->school_id = $note->school_id ?? $eleve->school_id;
                     $note->academic_year_id = $note->academic_year_id ?? $eleve->classe?->academic_year_id;
+                    $note->class_id = $note->class_id ?? $eleve->classe_id;
                 }
             }
         });

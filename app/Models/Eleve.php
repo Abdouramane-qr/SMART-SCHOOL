@@ -67,6 +67,22 @@ class Eleve extends Model
 
     protected static function booted(): void
     {
+        static::saving(function (Eleve $eleve): void {
+            if (($eleve->school_id === null) && $eleve->classe_id) {
+                $classe = Classe::find($eleve->classe_id);
+                if ($classe) {
+                    $eleve->school_id = $classe->school_id;
+                }
+            }
+
+            if (! $eleve->full_name) {
+                $fullName = trim(($eleve->first_name ?? '').' '.($eleve->last_name ?? ''));
+                if ($fullName !== '') {
+                    $eleve->full_name = $fullName;
+                }
+            }
+        });
+
         static::creating(function (Eleve $eleve): void {
             if (! $eleve->student_id) {
                 $initial = 'E';

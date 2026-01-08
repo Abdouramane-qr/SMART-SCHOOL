@@ -20,7 +20,7 @@ export const generatePaymentReceipt = (payment: PaymentData) => {
   
   // Header
   doc.setFontSize(20);
-  doc.setTextColor(59, 130, 246); // Primary color
+  doc.setTextColor(18, 115, 211); // Primary color
   doc.text("REÇU DE PAIEMENT", 105, 20, { align: "center" });
   
   // School info
@@ -42,7 +42,7 @@ export const generatePaymentReceipt = (payment: PaymentData) => {
   
   // Student information
   doc.setFontSize(14);
-  doc.setTextColor(59, 130, 246);
+  doc.setTextColor(18, 115, 211);
   doc.text("Informations de l'élève", 20, 70);
   
   doc.setFontSize(11);
@@ -52,7 +52,7 @@ export const generatePaymentReceipt = (payment: PaymentData) => {
   
   // Payment details table
   doc.setFontSize(14);
-  doc.setTextColor(59, 130, 246);
+  doc.setTextColor(18, 115, 211);
   doc.text("Détails du paiement", 20, 105);
   
   autoTable(doc, {
@@ -68,7 +68,7 @@ export const generatePaymentReceipt = (payment: PaymentData) => {
     ],
     theme: "striped",
     headStyles: {
-      fillColor: [59, 130, 246],
+      fillColor: [18, 115, 211],
       textColor: 255,
       fontSize: 11,
       fontStyle: "bold",

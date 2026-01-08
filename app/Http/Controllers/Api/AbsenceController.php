@@ -108,6 +108,11 @@ class AbsenceController extends Controller
             'justified' => ['sometimes', 'boolean'],
             'reason' => ['nullable', 'string', 'max:255'],
             'duration_minutes' => ['sometimes', 'integer', 'min:0'],
+        ], [
+            'eleve_id.required' => "L'eleve est obligatoire.",
+            'absence_date.required' => "La date d'absence est obligatoire.",
+            'absence_date.date' => "La date d'absence est invalide.",
+            'duration_minutes.min' => 'La duree doit etre positive.',
         ]);
 
         $payload = $validated;
@@ -167,6 +172,9 @@ class AbsenceController extends Controller
             'justified' => ['sometimes', 'boolean'],
             'reason' => ['sometimes', 'nullable', 'string', 'max:255'],
             'duration_minutes' => ['sometimes', 'integer', 'min:0'],
+        ], [
+            'absence_date.date' => "La date d'absence est invalide.",
+            'duration_minutes.min' => 'La duree doit etre positive.',
         ]);
 
         if (array_key_exists('class_id', $validated)) {

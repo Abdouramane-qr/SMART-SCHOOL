@@ -95,6 +95,9 @@ Plateforme de gestion scolaire (React + Laravel + Filament) avec separation clai
 
 ## Automatisations & coherence
 - ID eleve auto (initiale ecole + annee + increment).
+- Nom complet eleve deduit de prenom + nom si vide.
+- school_id deduit depuis la classe/eleve.
+- Paiements: amount/paid_amount/method deduits si manquants, statut calcule quand possible.
 - Cache tagge par ecole + annee, invalide sur create/update/delete.
 - Devise React alignee sur `default_currency` (XOF, USD, EUR, DH).
 - Deduction automatique school_id/academic_year_id pour notes, absences, emploi du temps.

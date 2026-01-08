@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\SalaryResource;
 use App\Models\Salary;
 use App\Support\CacheKey;
+use App\Services\FinanceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
@@ -59,8 +60,7 @@ class SalaryController extends Controller
 
         $validated['created_by'] = $request->user()?->id;
 
-        $salary = Salary::create($validated);
-        Cache::tags(CacheKey::tags($salary->school_id, null))->flush();
+        $salary = app(FinanceService::class)->createSalary($validated);
 
         return new SalaryResource($salary->load(['teacher.user']));
     }
@@ -85,17 +85,14 @@ class SalaryController extends Controller
             'notes' => ['sometimes', 'nullable', 'string'],
         ]);
 
-        $salary->update($validated);
-        Cache::tags(CacheKey::tags($salary->school_id, null))->flush();
+        $salary = app(FinanceService::class)->updateSalary($salary, $validated);
 
         return new SalaryResource($salary->load(['teacher.user']));
     }
 
     public function destroy(Salary $salary)
     {
-        $schoolId = $salary->school_id;
-        $salary->delete();
-        Cache::tags(CacheKey::tags($schoolId, null))->flush();
+        app(FinanceService::class)->deleteSalary($salary);
 
         return response()->noContent();
     }

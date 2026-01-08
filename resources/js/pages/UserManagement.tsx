@@ -51,11 +51,11 @@ const ROLE_LABELS: Record<AppRole, string> = {
 };
 
 const ROLE_COLORS: Record<AppRole, string> = {
-  admin: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
-  comptable: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-  enseignant: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-  eleve: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
-  parent: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
+  admin: "bg-background text-foreground border border-brand-neutral",
+  comptable: "bg-background text-foreground border border-brand-neutral",
+  enseignant: "bg-background text-foreground border border-brand-neutral",
+  eleve: "bg-background text-foreground border border-brand-neutral",
+  parent: "bg-background text-foreground border border-brand-neutral",
 };
 
 export default function UserManagement() {
@@ -141,7 +141,7 @@ export default function UserManagement() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-neutral"></div>
       </div>
     );
   }
@@ -156,7 +156,7 @@ export default function UserManagement() {
           </p>
         </div>
         <ActionTooltip tooltipKey="addUser">
-          <Button className="bg-primary shadow-sm" onClick={() => setIsAddUserOpen(true)}>
+          <Button onClick={() => setIsAddUserOpen(true)}>
             <UserPlus className="mr-2 h-4 w-4" />
             Nouvel utilisateur
           </Button>

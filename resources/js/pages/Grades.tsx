@@ -47,6 +47,7 @@ import {
   GRADE_TYPES,
   TERMS,
 } from "@/lib/gradeCalculations";
+import { getStatusTextClass } from "@/lib/statusMap";
 
 interface GradeWithRelations {
   id: string;
@@ -122,10 +123,10 @@ export default function Grades() {
   );
 
   const getGradeColor = (grade: number) => {
-    if (grade >= 16) return "text-green-600 dark:text-green-400";
-    if (grade >= 14) return "text-blue-600 dark:text-blue-400";
-    if (grade >= 10) return "text-yellow-600 dark:text-yellow-400";
-    return "text-destructive";
+    if (grade >= 16) return getStatusTextClass("success");
+    if (grade >= 14) return getStatusTextClass("info");
+    if (grade >= 10) return getStatusTextClass("warning");
+    return getStatusTextClass("neutral");
   };
 
   const getGradeBadge = (grade: number) => {
@@ -166,7 +167,7 @@ export default function Grades() {
 
       {/* Info Banner for read-only users */}
       <RoleGuard allowedRoles={["eleve", "parent"]}>
-        <div className="flex items-center gap-2 p-3 bg-muted rounded-lg border">
+        <div className="flex items-center gap-2 p-3 bg-surface rounded-lg border">
           <Info className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm text-muted-foreground">
             Mode consultation uniquement. Vous pouvez voir vos notes mais pas les modifier.

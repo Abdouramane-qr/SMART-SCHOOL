@@ -253,7 +253,7 @@ export default function Messages() {
           <Dialog open={isComposeOpen} onOpenChange={setIsComposeOpen}>
             <ActionTooltip tooltipKey="composeMessage">
               <DialogTrigger asChild>
-                <Button className="bg-primary">
+                <Button>
                   <Plus className="mr-2 h-4 w-4" />
                   Nouveau message
                 </Button>
@@ -336,7 +336,7 @@ export default function Messages() {
                   <Inbox className="h-4 w-4 mr-2" />
                   Reçus
                   {unreadCount > 0 && (
-                    <Badge className="ml-2 bg-primary" variant="default">
+                    <Badge className="ml-2" variant="default">
                       {unreadCount}
                     </Badge>
                   )}

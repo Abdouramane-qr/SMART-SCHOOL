@@ -142,7 +142,7 @@ export default function SchoolYears() {
                       <div className="flex items-center gap-2">
                         {year.name}
                         {year.is_current && (
-                          <Badge className="bg-primary text-primary-foreground">
+                          <Badge variant="default">
                             <Star className="h-3 w-3 mr-1" />
                             Courante
                           </Badge>

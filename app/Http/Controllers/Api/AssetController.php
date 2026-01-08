@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\AssetResource;
 use App\Models\Asset;
+use App\Services\AssetService;
 use App\Support\CacheKey;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -47,7 +48,7 @@ class AssetController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'category' => ['nullable', 'string', 'max:50'],
-            'status' => ['nullable', 'string', 'max:50'],
+            'status' => ['nullable', 'string', 'in:actif,panne,vendu'],
             'acquisition_date' => ['nullable', 'date'],
             'acquisition_value' => ['nullable', 'numeric', 'min:0'],
             'current_value' => ['nullable', 'numeric', 'min:0'],
@@ -60,8 +61,7 @@ class AssetController extends Controller
 
         $validated['created_by'] = $request->user()?->id;
 
-        $asset = Asset::create($validated);
-        Cache::tags(CacheKey::tags($asset->school_id, null))->flush();
+        $asset = app(AssetService::class)->create($validated);
 
         return new AssetResource($asset);
     }
@@ -78,7 +78,7 @@ class AssetController extends Controller
             'name' => ['sometimes', 'string', 'max:255'],
             'description' => ['sometimes', 'nullable', 'string'],
             'category' => ['sometimes', 'nullable', 'string', 'max:50'],
-            'status' => ['sometimes', 'nullable', 'string', 'max:50'],
+            'status' => ['sometimes', 'nullable', 'string', 'in:actif,panne,vendu'],
             'acquisition_date' => ['sometimes', 'nullable', 'date'],
             'acquisition_value' => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'current_value' => ['sometimes', 'nullable', 'numeric', 'min:0'],
@@ -89,17 +89,14 @@ class AssetController extends Controller
             'notes' => ['sometimes', 'nullable', 'string'],
         ]);
 
-        $asset->update($validated);
-        Cache::tags(CacheKey::tags($asset->school_id, null))->flush();
+        $asset = app(AssetService::class)->update($asset, $validated);
 
         return new AssetResource($asset);
     }
 
     public function destroy(Asset $asset)
     {
-        $schoolId = $asset->school_id;
-        $asset->delete();
-        Cache::tags(CacheKey::tags($schoolId, null))->flush();
+        app(AssetService::class)->delete($asset);
 
         return response()->noContent();
     }

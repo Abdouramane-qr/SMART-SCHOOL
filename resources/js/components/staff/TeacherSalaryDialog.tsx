@@ -237,10 +237,10 @@ export function TeacherSalaryDialog({ open, onOpenChange, teacher }: TeacherSala
                       <Badge variant="outline">{salary.month} {salary.year}</Badge>
                     </TableCell>
                     <TableCell>{formatDisplayAmount(salary.amount)}</TableCell>
-                    <TableCell className="text-green-600">
+                    <TableCell className="text-primary">
                       +{formatDisplayAmount(salary.bonus || 0)}
                     </TableCell>
-                    <TableCell className="text-red-600">
+                    <TableCell className="text-brand-neutral">
                       -{formatDisplayAmount(salary.deductions || 0)}
                     </TableCell>
                     <TableCell className="font-semibold">

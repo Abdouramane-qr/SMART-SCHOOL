@@ -21,7 +21,7 @@ import { toast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
 type AssetCategory = "mobilier" | "informatique" | "pedagogique" | "sportif" | "vehicule" | "autre";
-type AssetStatus = "neuf" | "bon" | "usage" | "endommage" | "hors_service";
+type AssetStatus = "actif" | "panne" | "vendu";
 
 interface AddAssetDialogProps {
   open: boolean;
@@ -39,11 +39,9 @@ const CATEGORY_OPTIONS: { value: AssetCategory; label: string }[] = [
 ];
 
 const STATUS_OPTIONS: { value: AssetStatus; label: string }[] = [
-  { value: "neuf", label: "Neuf" },
-  { value: "bon", label: "Bon état" },
-  { value: "usage", label: "Usagé" },
-  { value: "endommage", label: "Endommagé" },
-  { value: "hors_service", label: "Hors service" },
+  { value: "actif", label: "Actif" },
+  { value: "panne", label: "En panne" },
+  { value: "vendu", label: "Vendu" },
 ];
 
 export function AddAssetDialog({ open, onOpenChange, onSuccess }: AddAssetDialogProps) {
@@ -52,7 +50,7 @@ export function AddAssetDialog({ open, onOpenChange, onSuccess }: AddAssetDialog
     name: "",
     description: "",
     category: "autre" as AssetCategory,
-    status: "neuf" as AssetStatus,
+    status: "actif" as AssetStatus,
     acquisition_date: "",
     acquisition_value: "",
     current_value: "",
@@ -101,7 +99,7 @@ export function AddAssetDialog({ open, onOpenChange, onSuccess }: AddAssetDialog
         name: "",
         description: "",
         category: "autre",
-        status: "neuf",
+        status: "actif",
         acquisition_date: "",
         acquisition_value: "",
         current_value: "",

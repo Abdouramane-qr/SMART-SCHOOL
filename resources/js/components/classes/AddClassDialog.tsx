@@ -88,7 +88,7 @@ export function AddClassDialog({ onSuccess }: AddClassDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-primary shadow-sm">
+        <Button>
           <Plus className="mr-2 h-4 w-4" />
           Nouvelle classe
         </Button>

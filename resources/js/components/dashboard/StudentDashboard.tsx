@@ -117,7 +117,7 @@ export function StudentDashboard({ userId }: StudentDashboardProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-neutral"></div>
       </div>
     );
   }
@@ -137,17 +137,17 @@ export function StudentDashboard({ userId }: StudentDashboardProps) {
   );
 
   const getGradeColor = (grade: number) => {
-    if (grade >= 16) return "text-green-600";
-    if (grade >= 14) return "text-blue-600";
-    if (grade >= 10) return "text-yellow-600";
-    return "text-red-600";
+    if (grade >= 16) return "text-primary";
+    if (grade >= 14) return "text-foreground";
+    if (grade >= 10) return "text-brand-neutral";
+    return "text-brand-neutral";
   };
 
   const getGradeBg = (grade: number) => {
-    if (grade >= 16) return "bg-green-100 dark:bg-green-900/30";
-    if (grade >= 14) return "bg-blue-100 dark:bg-blue-900/30";
-    if (grade >= 10) return "bg-yellow-100 dark:bg-yellow-900/30";
-    return "bg-red-100 dark:bg-red-900/30";
+    if (grade >= 16) return "bg-primary/10";
+    if (grade >= 14) return "bg-surface";
+    if (grade >= 10) return "bg-background";
+    return "bg-background";
   };
 
   // Identify weak subjects
@@ -205,7 +205,7 @@ export function StudentDashboard({ userId }: StudentDashboardProps) {
       </div>
 
       {/* AI Insights Panel */}
-      <Card className="border-primary/30 bg-gradient-to-r from-primary/5 to-accent/5">
+      <Card className="border-brand-neutral bg-surface">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Lightbulb className="h-5 w-5 text-primary" />
@@ -217,7 +217,7 @@ export function StudentDashboard({ userId }: StudentDashboardProps) {
           <div className="grid gap-4 md:grid-cols-2">
             {/* Weak Subjects */}
             <div className="p-4 bg-background rounded-lg border">
-              <h4 className="font-semibold text-orange-600 flex items-center gap-2 mb-3">
+              <h4 className="font-semibold text-foreground flex items-center gap-2 mb-3">
                 <Target className="h-4 w-4" />
                 Matières à renforcer
               </h4>
@@ -242,7 +242,7 @@ export function StudentDashboard({ userId }: StudentDashboardProps) {
 
             {/* Strong Subjects */}
             <div className="p-4 bg-background rounded-lg border">
-              <h4 className="font-semibold text-green-600 flex items-center gap-2 mb-3">
+              <h4 className="font-semibold text-foreground flex items-center gap-2 mb-3">
                 <TrendingUp className="h-4 w-4" />
                 Points forts
               </h4>
@@ -333,8 +333,8 @@ export function StudentDashboard({ userId }: StudentDashboardProps) {
                       className={`flex items-center justify-between p-3 rounded-lg ${getGradeBg(grade.grade)}`}
                     >
                       <div className="flex items-center gap-2">
-                        {stat?.trend === "up" && <TrendingUp className="h-4 w-4 text-green-600" />}
-                        {stat?.trend === "down" && <TrendingDown className="h-4 w-4 text-red-600" />}
+                        {stat?.trend === "up" && <TrendingUp className="h-4 w-4 text-primary" />}
+                        {stat?.trend === "down" && <TrendingDown className="h-4 w-4 text-brand-neutral" />}
                         <div>
                           <p className="font-medium">{grade.subjects?.name}</p>
                           <p className="text-sm text-muted-foreground">{grade.term}</p>
@@ -397,9 +397,9 @@ export function StudentDashboard({ userId }: StudentDashboardProps) {
                     <Badge
                       variant={
                         payment.status === "paye"
-                          ? "default"
+                          ? "success"
                           : payment.status === "partiel"
-                          ? "secondary"
+                          ? "warning"
                           : "destructive"
                       }
                     >

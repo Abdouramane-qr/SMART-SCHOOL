@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { laravelTeacherAuditsApi } from "@/services/laravelSchoolApi";
 import { toast } from "sonner";
 import { History, ArrowRight } from "lucide-react";
+import { getStatusVariant } from "@/lib/statusMap";
 
 interface TeacherAuditModalProps {
   open: boolean;
@@ -37,11 +38,11 @@ export function TeacherAuditModal({ open, onOpenChange, teacher }: TeacherAuditM
   const getActionBadge = (action: string) => {
     switch (action) {
       case "INSERT":
-        return <Badge className="bg-green-500">Création</Badge>;
+        return <Badge variant={getStatusVariant("success")}>Création</Badge>;
       case "UPDATE":
-        return <Badge className="bg-blue-500">Modification</Badge>;
+        return <Badge variant={getStatusVariant("info")}>Modification</Badge>;
       case "DELETE":
-        return <Badge variant="destructive">Suppression</Badge>;
+        return <Badge variant={getStatusVariant("destructive")}>Suppression</Badge>;
       default:
         return <Badge>{action}</Badge>;
     }
@@ -98,7 +99,7 @@ export function TeacherAuditModal({ open, onOpenChange, teacher }: TeacherAuditM
 
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-neutral"></div>
           </div>
         ) : auditLogs.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">

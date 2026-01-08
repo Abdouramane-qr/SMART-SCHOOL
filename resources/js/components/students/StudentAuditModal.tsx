@@ -56,12 +56,12 @@ export function StudentAuditModal({ studentId, studentName, isOpen, onClose }: S
   };
 
   const getActionBadge = (action: string) => {
-    const actions: Record<string, { label: string; variant: "default" | "secondary" | "destructive" }> = {
-      INSERT: { label: "Création", variant: "default" },
-      UPDATE: { label: "Modification", variant: "secondary" },
+    const actions: Record<string, { label: string; variant: "success" | "info" | "destructive" }> = {
+      INSERT: { label: "Création", variant: "success" },
+      UPDATE: { label: "Modification", variant: "info" },
       DELETE: { label: "Suppression", variant: "destructive" },
     };
-    const actionInfo = actions[action] || { label: action, variant: "secondary" };
+    const actionInfo = actions[action] || { label: action, variant: "info" };
     return <Badge variant={actionInfo.variant}>{actionInfo.label}</Badge>;
   };
 
@@ -103,7 +103,7 @@ export function StudentAuditModal({ studentId, studentName, isOpen, onClose }: S
 
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-neutral"></div>
           </div>
         ) : logs.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
@@ -131,8 +131,8 @@ export function StudentAuditModal({ studentId, studentName, isOpen, onClose }: S
                       {getChangedFields(log.old_data, log.new_data).map((change, idx) => (
                         <div key={idx} className="text-sm">
                           <span className="font-medium">{change.field}:</span>{" "}
-                          <span className="text-red-500 line-through">{change.old}</span>{" "}
-                          <span className="text-green-600">→ {change.new}</span>
+                          <span className="text-brand-neutral line-through">{change.old}</span>{" "}
+                          <span className="text-primary">→ {change.new}</span>
                         </div>
                       ))}
                     </div>

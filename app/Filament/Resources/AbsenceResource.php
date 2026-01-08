@@ -4,6 +4,8 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\AbsenceResource\Pages;
 use App\Models\Absence;
+use App\Models\AcademicYear;
+use App\Support\StatusMap;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Components\DatePicker;
@@ -46,7 +48,11 @@ class AbsenceResource extends Resource
                     ->label('Année scolaire')
                     ->relationship('academicYear', 'name')
                     ->searchable()
-                    ->preload(),
+                    ->preload()
+                    ->default(fn () => AcademicYear::query()
+                        ->where('school_id', auth()->user()?->school_id)
+                        ->where('is_active', true)
+                        ->value('id')),
                 DatePicker::make('date')
                     ->label('Date')
                     ->required(),
@@ -79,7 +85,9 @@ class AbsenceResource extends Resource
                     ->label('Statut')
                     ->badge()
                     ->formatStateUsing(fn (bool $state): string => $state ? 'Justifiée' : 'Non justifiée')
-                    ->color(fn (bool $state): string => $state ? 'success' : 'danger')
+                    ->color(fn (bool $state): string => $state
+                        ? StatusMap::filament('success')
+                        : StatusMap::filament('destructive'))
                     ->tooltip(fn (bool $state): string => $state ? 'Absence justifiée' : 'Absence non justifiée'),
             ])
             ->filters([

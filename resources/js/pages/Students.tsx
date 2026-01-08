@@ -55,6 +55,7 @@ import {
   normalizeStudentPayments,
 } from "@/services/laravelSchoolApi";
 import { formatAmount, type Currency } from "@/lib/financeUtils";
+import { getStatusTextClass } from "@/lib/statusMap";
 
 const StudentDetailsModal = lazy(() =>
   import("@/components/students/StudentDetailsModal").then((module) => ({
@@ -245,7 +246,7 @@ export default function Students() {
         icon={Users}
         actions={
           <ActionTooltip tooltipKey="addStudent">
-            <Button className="bg-primary shadow-sm" onClick={() => setIsAddOpen(true)}>
+            <Button onClick={() => setIsAddOpen(true)}>
               <UserPlus className="mr-2 h-4 w-4" />
               Nouvel élève
             </Button>
@@ -348,11 +349,7 @@ export default function Students() {
                     <div className="flex flex-col items-center gap-3 py-6">
                       <span>Aucun élève trouvé</span>
                       <ActionTooltip tooltipKey="addStudent">
-                        <Button
-                          size="sm"
-                          className="bg-primary shadow-sm"
-                          onClick={() => setIsAddOpen(true)}
-                        >
+                        <Button size="sm" onClick={() => setIsAddOpen(true)}>
                           <UserPlus className="mr-2 h-4 w-4" />
                           Ajouter un élève
                         </Button>
@@ -374,10 +371,10 @@ export default function Students() {
                           <span className="text-muted-foreground">Non assigné</span>
                         )}
                       </TableCell>
-                      <TableCell className="font-medium text-green-600">
+                      <TableCell className={`font-medium ${getStatusTextClass("success")}`}>
                         {formatAmount(student.total_paid, defaultCurrency)}
                       </TableCell>
-                      <TableCell className={remaining > 0 ? "font-medium text-red-600" : "text-muted-foreground"}>
+                      <TableCell className={remaining > 0 ? "font-medium text-brand-neutral" : "text-muted-foreground"}>
                         {remaining > 0 ? formatAmount(remaining, defaultCurrency) : "—"}
                       </TableCell>
                       <TableCell className="text-right">

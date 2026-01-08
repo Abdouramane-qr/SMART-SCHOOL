@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\ExpenseResource;
 use App\Models\Expense;
 use App\Support\CacheKey;
+use App\Services\FinanceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
@@ -55,8 +56,7 @@ class ExpenseController extends Controller
 
         $validated['created_by'] = $request->user()?->id;
 
-        $expense = Expense::create($validated);
-        Cache::tags(CacheKey::tags($expense->school_id, null))->flush();
+        $expense = app(FinanceService::class)->createExpense($validated);
 
         return new ExpenseResource($expense);
     }
@@ -78,17 +78,14 @@ class ExpenseController extends Controller
             'notes' => ['sometimes', 'nullable', 'string'],
         ]);
 
-        $expense->update($validated);
-        Cache::tags(CacheKey::tags($expense->school_id, null))->flush();
+        $expense = app(FinanceService::class)->updateExpense($expense, $validated);
 
         return new ExpenseResource($expense);
     }
 
     public function destroy(Expense $expense)
     {
-        $schoolId = $expense->school_id;
-        $expense->delete();
-        Cache::tags(CacheKey::tags($schoolId, null))->flush();
+        app(FinanceService::class)->deleteExpense($expense);
 
         return response()->noContent();
     }

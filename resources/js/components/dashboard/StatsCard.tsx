@@ -30,8 +30,8 @@ export function StatsCard({ title, value, icon: Icon, trend, subtitle }: StatsCa
           <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
         )}
         {trend && (
-          <p className={`text-xs mt-2 ${trend.positive ? 'text-green-600' : 'text-red-600'}`}>
-            {trend.positive ? '↑' : '↓'} {trend.value}
+          <p className={`text-xs mt-2 ${trend.positive ? "text-primary" : "text-brand-neutral"}`}>
+            {trend.positive ? "↑" : "↓"} {trend.value}
           </p>
         )}
       </CardContent>

@@ -7,11 +7,11 @@ Objectif: lisibilite maximale sans changer la charte ni les couleurs.
 
 ### Contrastes
 - Base colors definies en HSL, foreground vs background eleves.  
-- `muted-foreground` reste lisible mais peut etre limite sur ecrans faibles luminosite.
-- Statut: AMELIORABLE (mineur)
+- `muted-foreground` renforce pour lisibilite en plein soleil.
+- Statut: OK
 
 ### Taille texte mobile
-- Base `body` = 16px, titres en Fraunces.  
+- Base `body` = 16px, titres en Source Sans 3.  
 - Les textes secondaires en `text-muted-foreground` existent mais pas de reduction abusive.  
 - Statut: OK (SKIP)
 
@@ -22,6 +22,7 @@ Objectif: lisibilite maximale sans changer la charte ni les couleurs.
 
 ## Ameliorations visuelles mineures (appliquees)
 - Reductions des ombres fortes et gradients pour eviter fatigue visuelle.
+- Tables sur fond `surface` + hover `background` pour lecture.
 
 ## Conclusion
 Lisibilite globalement bonne. Ajustements mineurs appliques.

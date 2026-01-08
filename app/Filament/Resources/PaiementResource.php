@@ -4,17 +4,18 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\PaiementResource\Pages;
 use App\Models\Paiement;
+use App\Support\StatusMap;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Table;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
 
 class PaiementResource extends Resource
 {
@@ -85,9 +86,9 @@ class PaiementResource extends Resource
                 TextColumn::make('status')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'paye' => 'success',
-                        'partiel' => 'warning',
-                        'en_retard' => 'danger',
+                        'paye' => StatusMap::filament('success'),
+                        'partiel' => StatusMap::filament('warning'),
+                        'en_retard' => StatusMap::filament('destructive'),
                         default => 'gray',
                     })
                     ->formatStateUsing(fn (string $state): string => match ($state) {

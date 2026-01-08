@@ -12,6 +12,50 @@ export interface LaravelListResponse<T> {
   meta?: LaravelPaginationMeta;
 }
 
+const PAGED_LIST_SIZE = 200;
+
+const buildQuery = (params: Record<string, string | number | null | undefined>) => {
+  const searchParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === "") {
+      return;
+    }
+    searchParams.set(key, String(value));
+  });
+  return searchParams.toString();
+};
+
+const fetchAllPages = async <T>(
+  path: string,
+  params: Record<string, string | number | null | undefined> = {},
+): Promise<T[]> => {
+  const items: T[] = [];
+  let page = 1;
+  let lastPage = 1;
+
+  do {
+    const query = buildQuery({
+      ...params,
+      per_page: PAGED_LIST_SIZE,
+      page,
+    });
+    const payload = await apiRequest<any>(`${path}?${query}`);
+    const { data, meta } = unwrapData<T[]>(payload);
+    if (Array.isArray(data)) {
+      items.push(...data);
+    }
+
+    if (!meta?.last_page || meta.last_page <= page) {
+      break;
+    }
+
+    lastPage = meta.last_page;
+    page += 1;
+  } while (page <= lastPage);
+
+  return items;
+};
+
 export interface LaravelClasse {
   id: string | number;
   name?: string;
@@ -128,6 +172,7 @@ export interface LaravelTeacher {
 
 export interface LaravelAsset {
   id: string | number;
+  expense_id?: string | number | null;
   name?: string | null;
   description?: string | null;
   category?: string | null;
@@ -326,9 +371,9 @@ export const laravelStudentsApi = {
     return data?.[0] || null;
   },
   getByParentEmail: async (email: string): Promise<LaravelEleve[]> => {
-    const payload = await apiRequest<any>(`/eleves?parent_email=${encodeURIComponent(email)}&per_page=1000`);
-    const { data } = unwrapData<LaravelEleve[]>(payload);
-    return data || [];
+    return fetchAllPages<LaravelEleve>("/eleves", {
+      parent_email: email,
+    });
   },
   getById: async (id: string): Promise<LaravelEleve> => {
     const payload = await apiRequest<any>(`/eleves/${id}`);
@@ -360,14 +405,12 @@ export const laravelStudentsApi = {
 
 export const laravelPaiementsApi = {
   getAll: async (): Promise<LaravelPaiement[]> => {
-    const payload = await apiRequest<any>("/paiements?per_page=1000");
-    const { data } = unwrapData<LaravelPaiement[]>(payload);
-    return data || [];
+    return fetchAllPages<LaravelPaiement>("/paiements");
   },
   getByStudentId: async (studentId: string | number): Promise<LaravelPaiement[]> => {
-    const payload = await apiRequest<any>(`/paiements?per_page=1000&eleve_id=${studentId}`);
-    const { data } = unwrapData<LaravelPaiement[]>(payload);
-    return data || [];
+    return fetchAllPages<LaravelPaiement>("/paiements", {
+      eleve_id: studentId,
+    });
   },
   create: async (payload: Record<string, unknown>): Promise<LaravelPaiement> => {
     const response = await apiRequest<any>("/paiements", {
@@ -445,9 +488,7 @@ export const laravelSchoolYearsApi = {
 
 export const laravelExpensesApi = {
   getAll: async (): Promise<LaravelExpense[]> => {
-    const payload = await apiRequest<any>("/expenses?per_page=1000");
-    const { data } = unwrapData<LaravelExpense[]>(payload);
-    return data || [];
+    return fetchAllPages<LaravelExpense>("/expenses");
   },
   create: async (payload: Record<string, unknown>): Promise<LaravelExpense> => {
     const response = await apiRequest<any>("/expenses", {
@@ -472,14 +513,12 @@ export const laravelExpensesApi = {
 
 export const laravelSalariesApi = {
   getAll: async (): Promise<LaravelSalary[]> => {
-    const payload = await apiRequest<any>("/salaries?per_page=1000");
-    const { data } = unwrapData<LaravelSalary[]>(payload);
-    return data || [];
+    return fetchAllPages<LaravelSalary>("/salaries");
   },
   getByTeacherId: async (teacherId: string | number): Promise<LaravelSalary[]> => {
-    const payload = await apiRequest<any>(`/salaries?teacher_id=${teacherId}&per_page=1000`);
-    const { data } = unwrapData<LaravelSalary[]>(payload);
-    return data || [];
+    return fetchAllPages<LaravelSalary>("/salaries", {
+      teacher_id: teacherId,
+    });
   },
   create: async (payload: Record<string, unknown>): Promise<LaravelSalary> => {
     const response = await apiRequest<any>("/salaries", {
@@ -536,9 +575,7 @@ export const laravelTeachersApi = {
 
 export const laravelAssetsApi = {
   getAll: async (): Promise<LaravelAsset[]> => {
-    const payload = await apiRequest<any>("/assets?per_page=1000");
-    const { data } = unwrapData<LaravelAsset[]>(payload);
-    return data || [];
+    return fetchAllPages<LaravelAsset>("/assets");
   },
   create: async (payload: Record<string, unknown>): Promise<LaravelAsset> => {
     const response = await apiRequest<any>("/assets", {
@@ -595,14 +632,12 @@ export const laravelMessagesApi = {
 
 export const laravelAbsencesApi = {
   getAll: async (): Promise<LaravelAbsence[]> => {
-    const payload = await apiRequest<any>("/absences?per_page=1000");
-    const { data } = unwrapData<LaravelAbsence[]>(payload);
-    return data || [];
+    return fetchAllPages<LaravelAbsence>("/absences");
   },
   getByStudentId: async (studentId: string | number): Promise<LaravelAbsence[]> => {
-    const payload = await apiRequest<any>(`/absences?per_page=1000&eleve_id=${studentId}`);
-    const { data } = unwrapData<LaravelAbsence[]>(payload);
-    return data || [];
+    return fetchAllPages<LaravelAbsence>("/absences", {
+      eleve_id: studentId,
+    });
   },
   getByStudentIds: async (studentIds: Array<string | number>): Promise<LaravelAbsence[]> => {
     if (!studentIds.length) {
@@ -612,9 +647,9 @@ export const laravelAbsencesApi = {
     if (!ids.length) {
       return [];
     }
-    const payload = await apiRequest<any>(`/absences?per_page=1000&student_ids=${ids.join(",")}`);
-    const { data } = unwrapData<LaravelAbsence[]>(payload);
-    return data || [];
+    return fetchAllPages<LaravelAbsence>("/absences", {
+      student_ids: ids.join(","),
+    });
   },
   create: async (payload: Record<string, unknown>): Promise<LaravelAbsence> => {
     const response = await apiRequest<any>("/absences", {
@@ -666,9 +701,7 @@ export const laravelClassroomsApi = {
 
 export const laravelTimetableApi = {
   getAll: async (): Promise<LaravelTimetableEntry[]> => {
-    const payload = await apiRequest<any>("/timetable?per_page=1000");
-    const { data } = unwrapData<LaravelTimetableEntry[]>(payload);
-    return data || [];
+    return fetchAllPages<LaravelTimetableEntry>("/timetable");
   },
   getByClassId: async (classId: string | number): Promise<LaravelTimetableEntry[]> => {
     const payload = await apiRequest<any>(`/timetable?class_id=${classId}`);
@@ -725,14 +758,14 @@ const normalizeGrade = (note: LaravelGradeRaw) => ({
 
 export const laravelGradesApi = {
   getAll: async (): Promise<ReturnType<typeof normalizeGrade>[]> => {
-    const payload = await apiRequest<any>("/notes?per_page=1000");
-    const { data } = unwrapData<LaravelGradeRaw[]>(payload);
-    return (data || []).map(normalizeGrade);
+    const data = await fetchAllPages<LaravelGradeRaw>("/notes");
+    return data.map(normalizeGrade);
   },
   getByStudentId: async (studentId: string | number): Promise<ReturnType<typeof normalizeGrade>[]> => {
-    const payload = await apiRequest<any>(`/notes?per_page=1000&eleve_id=${studentId}`);
-    const { data } = unwrapData<LaravelGradeRaw[]>(payload);
-    return (data || []).map(normalizeGrade);
+    const data = await fetchAllPages<LaravelGradeRaw>("/notes", {
+      eleve_id: studentId,
+    });
+    return data.map(normalizeGrade);
   },
   getByStudentIds: async (studentIds: Array<string | number>): Promise<ReturnType<typeof normalizeGrade>[]> => {
     if (!studentIds.length) {
@@ -742,9 +775,10 @@ export const laravelGradesApi = {
     if (!ids.length) {
       return [];
     }
-    const payload = await apiRequest<any>(`/notes?per_page=1000&student_ids=${ids.join(",")}`);
-    const { data } = unwrapData<LaravelGradeRaw[]>(payload);
-    return (data || []).map(normalizeGrade);
+    const data = await fetchAllPages<LaravelGradeRaw>("/notes", {
+      student_ids: ids.join(","),
+    });
+    return data.map(normalizeGrade);
   },
   create: async (payload: {
     student_id: string | number;

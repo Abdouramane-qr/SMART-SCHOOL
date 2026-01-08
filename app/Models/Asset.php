@@ -9,6 +9,7 @@ class Asset extends Model
 {
     protected $fillable = [
         'school_id',
+        'expense_id',
         'name',
         'description',
         'category',
@@ -27,6 +28,11 @@ class Asset extends Model
     public function school(): BelongsTo
     {
         return $this->belongsTo(School::class);
+    }
+
+    public function expense(): BelongsTo
+    {
+        return $this->belongsTo(Expense::class);
     }
 
     public function creator(): BelongsTo

@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\NoteResource\Pages;
 use App\Models\Note;
+use App\Models\AcademicYear;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Components\Select;
@@ -51,6 +52,10 @@ class NoteResource extends Resource
                     ->relationship('academicYear', 'name')
                     ->searchable()
                     ->preload()
+                    ->default(fn () => AcademicYear::query()
+                        ->where('school_id', auth()->user()?->school_id)
+                        ->where('is_active', true)
+                        ->value('id'))
                     ->required(),
                 TextInput::make('value')
                     ->label('Note')

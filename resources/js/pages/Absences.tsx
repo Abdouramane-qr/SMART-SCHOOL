@@ -34,6 +34,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatsCard } from "@/components/dashboard/StatsCard";
+import { getStatusVariant } from "@/lib/statusMap";
 import {
   Search,
   Plus,
@@ -247,7 +248,7 @@ export default function Absences() {
       body: tableData,
       startY: 40,
       styles: { fontSize: 9 },
-      headStyles: { fillColor: [59, 130, 246] },
+      headStyles: { fillColor: [18, 115, 211] },
     });
 
     doc.save(`rapport-absences-${format(new Date(), "yyyy-MM-dd")}.pdf`);
@@ -285,7 +286,7 @@ export default function Absences() {
             <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
               <ActionTooltip tooltipKey="addAbsence">
                 <DialogTrigger asChild>
-                  <Button className="bg-primary">
+                  <Button>
                     <Plus className="mr-2 h-4 w-4" />
                     Nouvelle absence
                   </Button>
@@ -303,7 +304,15 @@ export default function Absences() {
                     <Label>Élève *</Label>
                     <Select
                       value={formData.student_id}
-                      onValueChange={(v) => setFormData({ ...formData, student_id: v })}
+                      onValueChange={(v) => {
+                        const selected = students.find((student) => String(student.id) === v);
+                        const classId = selected?.classe?.id ?? selected?.class?.id ?? selected?.classe_id;
+                        setFormData({
+                          ...formData,
+                          student_id: v,
+                          class_id: classId ? String(classId) : formData.class_id,
+                        });
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Sélectionner un élève" />
@@ -530,7 +539,11 @@ export default function Absences() {
                     </TableCell>
                     <TableCell>
                       <Badge
-                        variant={absence.absence_type === "absence" ? "destructive" : "secondary"}
+                        variant={
+                          absence.absence_type === "absence"
+                            ? getStatusVariant("destructive")
+                            : "secondary"
+                        }
                       >
                         {absence.absence_type === "absence" ? "Absence" : "Retard"}
                         {absence.absence_type === "retard" &&
@@ -540,12 +553,12 @@ export default function Absences() {
                     </TableCell>
                     <TableCell>
                       {absence.justified ? (
-                        <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                        <Badge variant={getStatusVariant("success")}>
                           <CheckCircle className="h-3 w-3 mr-1" />
                           Oui
                         </Badge>
                       ) : (
-                        <Badge variant="outline" className="text-orange-600">
+                        <Badge variant={getStatusVariant("warning")}>
                           <XCircle className="h-3 w-3 mr-1" />
                           Non
                         </Badge>
@@ -593,10 +606,18 @@ export default function Absences() {
           <form onSubmit={handleUpdate} className="space-y-4">
             <div className="space-y-2">
               <Label>Élève</Label>
-              <Select
-                value={formData.student_id}
-                onValueChange={(v) => setFormData({ ...formData, student_id: v })}
-              >
+                <Select
+                  value={formData.student_id}
+                  onValueChange={(v) => {
+                    const selected = students.find((student) => String(student.id) === v);
+                    const classId = selected?.classe?.id ?? selected?.class?.id ?? selected?.classe_id;
+                    setFormData({
+                      ...formData,
+                      student_id: v,
+                      class_id: classId ? String(classId) : formData.class_id,
+                    });
+                  }}
+                >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

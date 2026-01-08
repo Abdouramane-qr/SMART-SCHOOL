@@ -36,7 +36,7 @@ export const exportDashboardToPDF = (data: ExportData) => {
   const currencyLabel = `${CURRENCIES[currency]?.symbol ?? currency} (${currency})`;
   
   // Header
-  doc.setFillColor(33, 150, 243);
+  doc.setFillColor(18, 115, 211);
   doc.rect(0, 0, pageWidth, 34, "F");
   
   doc.setTextColor(255, 255, 255);
@@ -57,10 +57,10 @@ export const exportDashboardToPDF = (data: ExportData) => {
   // Stats Section
   doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(33, 150, 243);
+  doc.setTextColor(18, 115, 211);
   doc.text("Statistiques Générales", 14, 62);
   
-  doc.setDrawColor(33, 150, 243);
+  doc.setDrawColor(18, 115, 211);
   doc.line(14, 65, pageWidth - 14, 65);
   
   // Stats Table
@@ -75,7 +75,7 @@ export const exportDashboardToPDF = (data: ExportData) => {
     ],
     theme: "striped",
     headStyles: {
-      fillColor: [33, 150, 243],
+      fillColor: [18, 115, 211],
       textColor: [255, 255, 255],
       fontStyle: "bold",
     },
@@ -99,10 +99,10 @@ export const exportDashboardToPDF = (data: ExportData) => {
   
   doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(33, 150, 243);
+  doc.setTextColor(18, 115, 211);
   doc.text("Répartition des Paiements", 14, currentY);
   
-  doc.setDrawColor(33, 150, 243);
+  doc.setDrawColor(18, 115, 211);
   doc.line(14, currentY + 3, pageWidth - 14, currentY + 3);
   
   autoTable(doc, {
@@ -115,7 +115,7 @@ export const exportDashboardToPDF = (data: ExportData) => {
     }),
     theme: "striped",
     headStyles: {
-      fillColor: [33, 150, 243],
+      fillColor: [18, 115, 211],
       textColor: [255, 255, 255],
       fontStyle: "bold",
     },
@@ -135,10 +135,10 @@ export const exportDashboardToPDF = (data: ExportData) => {
   
   doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(33, 150, 243);
+  doc.setTextColor(18, 115, 211);
   doc.text("Évolution Mensuelle des Paiements", 14, currentY2);
   
-  doc.setDrawColor(33, 150, 243);
+  doc.setDrawColor(18, 115, 211);
   doc.line(14, currentY2 + 3, pageWidth - 14, currentY2 + 3);
   
   autoTable(doc, {
@@ -150,7 +150,7 @@ export const exportDashboardToPDF = (data: ExportData) => {
     ]),
     theme: "striped",
     headStyles: {
-      fillColor: [33, 150, 243],
+      fillColor: [18, 115, 211],
       textColor: [255, 255, 255],
       fontStyle: "bold",
     },

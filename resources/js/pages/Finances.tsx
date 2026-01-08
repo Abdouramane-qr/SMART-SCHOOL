@@ -16,6 +16,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ActionTooltip } from "@/components/ui/ActionTooltip";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -43,6 +44,7 @@ import {
   PAYMENT_STATUS,
   type Currency,
 } from "@/lib/financeUtils";
+import { getStatusTextClass } from "@/lib/statusMap";
 
 export default function Finances() {
   const [payments, setPayments] = useState<any[]>([]);
@@ -139,13 +141,26 @@ export default function Finances() {
   const getStatusBadge = (status: string) => {
     const config = PAYMENT_STATUS[status as keyof typeof PAYMENT_STATUS];
     if (!config) return <Badge>{status}</Badge>;
-    return <Badge className={config.color}>{config.label}</Badge>;
+    return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
   if (loading || !financeStats) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="space-y-6 animate-in fade-in duration-500">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-56" />
+          <Skeleton className="h-4 w-72" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <Skeleton key={index} className="h-28 w-full" />
+          ))}
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          <Skeleton className="h-80 w-full" />
+          <Skeleton className="h-80 w-full" />
+        </div>
+        <Skeleton className="h-64 w-full" />
       </div>
     );
   }
@@ -184,7 +199,7 @@ export default function Finances() {
       />
 
       {/* Info Banner */}
-      <div className="flex items-center gap-2 p-3 bg-muted rounded-lg border">
+      <div className="flex items-center gap-2 p-3 bg-surface rounded-lg border">
         <Info className="h-4 w-4 text-muted-foreground" />
         <span className="text-sm text-muted-foreground">
           Devise par défaut: {financeSettings.default_currency || "XOF"} • 
@@ -330,13 +345,13 @@ export default function Finances() {
                       <TableCell className="font-medium">
                         {formatAmount(amount, currency)}
                       </TableCell>
-                      <TableCell className="font-medium text-green-600">
+                      <TableCell className={`font-medium ${getStatusTextClass("success")}`}>
                         {formatAmount(paidAmount, currency)}
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         {taxAmount > 0 ? formatAmount(taxAmount, currency) : "-"}
                       </TableCell>
-                      <TableCell className={remaining > 0 ? "font-medium text-red-600" : "text-muted-foreground"}>
+                      <TableCell className={remaining > 0 ? "font-medium text-brand-neutral" : "text-muted-foreground"}>
                         {formatAmount(remaining, currency)}
                       </TableCell>
                       <TableCell>{getStatusBadge(payment.status)}</TableCell>
@@ -413,7 +428,7 @@ export default function Finances() {
                       <TableCell className="text-muted-foreground">
                         {taxAmount > 0 ? formatAmount(taxAmount, currency) : "-"}
                       </TableCell>
-                      <TableCell className="font-medium text-destructive">
+                      <TableCell className="font-medium text-brand-neutral">
                         {formatAmount(totalTTC, currency)}
                       </TableCell>
                       <TableCell>

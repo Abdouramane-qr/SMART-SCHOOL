@@ -69,10 +69,10 @@ export function StudentDetailsModal({
   };
 
   const getStatusBadge = (status: string) => {
-    const statusMap: Record<string, { label: string; variant: "default" | "secondary" | "destructive" }> = {
-      paye: { label: "Payé", variant: "default" },
+    const statusMap: Record<string, { label: string; variant: "success" | "warning" | "destructive" | "secondary" }> = {
+      paye: { label: "Payé", variant: "success" },
       en_retard: { label: "En retard", variant: "destructive" },
-      partiel: { label: "Partiellement payé", variant: "secondary" },
+      partiel: { label: "Partiellement payé", variant: "warning" },
     };
     const statusInfo = statusMap[status] || { label: status, variant: "secondary" };
     return <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>;
@@ -87,7 +87,7 @@ export function StudentDetailsModal({
 
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-neutral"></div>
           </div>
         ) : (
           <div className="space-y-6">
@@ -174,7 +174,7 @@ export function StudentDetailsModal({
                         </TableCell>
                         <TableCell>{payment.payment_type || payment.method || "N/A"}</TableCell>
                         <TableCell>{formatAmount(Number(payment.amount || 0), currency)}</TableCell>
-                        <TableCell className="font-medium text-green-600">
+                        <TableCell className="font-medium text-primary">
                           {formatAmount(Number(payment.paid_amount ?? payment.amount ?? 0), currency)}
                         </TableCell>
                         <TableCell>{getStatusBadge(payment.status)}</TableCell>

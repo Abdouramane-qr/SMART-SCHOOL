@@ -1,0 +1,37 @@
+{
+  "success": {
+    "reactVariant": "success",
+    "reactText": "text-success",
+    "reactSoft": "bg-success/10 text-success border-success/20",
+    "reactOutline": "text-success border-success/40",
+    "filament": "success"
+  },
+  "info": {
+    "reactVariant": "info",
+    "reactText": "text-info",
+    "reactSoft": "bg-info/10 text-info border-info/20",
+    "reactOutline": "text-info border-info/40",
+    "filament": "info"
+  },
+  "warning": {
+    "reactVariant": "warning",
+    "reactText": "text-warning",
+    "reactSoft": "bg-warning/10 text-warning border-warning/20",
+    "reactOutline": "text-warning border-warning/40",
+    "filament": "warning"
+  },
+  "neutral": {
+    "reactVariant": "secondary",
+    "reactText": "text-brand-neutral",
+    "reactSoft": "bg-brand-neutral/10 text-brand-neutral border-brand-neutral/20",
+    "reactOutline": "text-brand-neutral border-brand-neutral/40",
+    "filament": "gray"
+  },
+  "destructive": {
+    "reactVariant": "destructive",
+    "reactText": "text-destructive",
+    "reactSoft": "bg-destructive/10 text-destructive border-destructive/20",
+    "reactOutline": "text-destructive border-destructive/40",
+    "filament": "danger"
+  }
+}

@@ -1,4 +1,4 @@
-@import url("https://fonts.bunny.net/css?family=source-sans-3:400,500,600,700&display=swap");
+@import url("https://fonts.bunny.net/css?family=source-sans-3:400,500,600,700&family=source-serif-4:400,500,600,700&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -10,53 +10,72 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
+    --brand-primary: 215 98% 56%;
+    --brand-background: 200 27% 96%;
+    --brand-neutral: 0 0% 70%;
+    --brand-white: 0 0% 100%;
+
+    --background: var(--brand-background);
     --foreground: 222 47% 11%;
 
-    --card: 0 0% 100%;
+    --card: var(--brand-white);
     --card-foreground: 222 47% 11%;
 
-    --popover: 0 0% 100%;
+    --popover: var(--brand-white);
     --popover-foreground: 222 47% 11%;
 
-    --primary: 243 75% 59%;
+    --surface: var(--brand-white);
+
+    --primary: var(--brand-primary);
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 243 75% 54%;
+    --primary-hover: 215 98% 50%;
 
-    --secondary: 189 94% 43%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: var(--brand-background);
+    --secondary-foreground: 222 47% 11%;
 
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
+    --muted: var(--brand-background);
+    --muted-foreground: 0 0% 35%;
 
-    --accent: 214 32% 91%;
+    --accent: var(--brand-background);
     --accent-foreground: 222 47% 11%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 243 75% 59%;
+    --success: var(--brand-primary);
+    --success-foreground: 0 0% 100%;
+
+    --warning: var(--brand-neutral);
+    --warning-foreground: 222 47% 11%;
+
+    --info: var(--brand-primary);
+    --info-foreground: 0 0% 100%;
+
+    --border: var(--brand-neutral);
+    --input: var(--brand-neutral);
+    --ring: var(--brand-primary);
 
     --radius: 0.75rem;
 
-    --sidebar-background: 210 40% 98%;
+    --font-sans: "Source Sans 3", system-ui, sans-serif;
+    --font-display: "Source Serif 4", "Source Sans 3", system-ui, sans-serif;
+
+    --sidebar-background: var(--brand-background);
     --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: 243 75% 59%;
+    --sidebar-primary: var(--brand-primary);
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 214 32% 91%;
+    --sidebar-accent: var(--brand-background);
     --sidebar-accent-foreground: 222 47% 11%;
-    --sidebar-border: 214 32% 91%;
-    --sidebar-ring: 243 75% 59%;
+    --sidebar-border: var(--brand-neutral);
+    --sidebar-ring: var(--brand-primary);
 
     /* Custom tokens */
-    --gradient-primary: linear-gradient(135deg, hsl(243 75% 59%) 0%, hsl(243 75% 59%) 100%);
-    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(210 40% 98%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(215 98% 56%) 0%, hsl(203 92% 54%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(200 27% 96%) 100%);
     --shadow-sm: 0 1px 2px 0 hsl(222 47% 11% / 0.04);
     --shadow-md: 0 2px 4px -1px hsl(222 47% 11% / 0.08), 0 1px 2px -1px hsl(222 47% 11% / 0.06);
     --shadow-lg: 0 6px 12px -4px hsl(222 47% 11% / 0.12), 0 2px 4px -2px hsl(222 47% 11% / 0.06);
-    --shadow-blue: 0 4px 10px -4px hsl(243 75% 59% / 0.18);
+    --shadow-blue: 0 4px 10px -4px hsl(215 98% 56% / 0.18);
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
@@ -70,15 +89,17 @@ All colors MUST be HSL.
     --popover: 217 33% 17%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 243 75% 65%;
-    --primary-foreground: 0 0% 100%;
-    --primary-hover: 243 75% 60%;
+    --surface: 217 33% 17%;
 
-    --secondary: 189 94% 43%;
-    --secondary-foreground: 0 0% 100%;
+    --primary: 215 98% 56%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 215 98% 62%;
+
+    --secondary: 215 20% 22%;
+    --secondary-foreground: 210 40% 98%;
 
     --muted: 215 25% 27%;
-    --muted-foreground: 215 20% 65%;
+    --muted-foreground: 0 0% 70%;
 
     --accent: 215 25% 27%;
     --accent-foreground: 210 40% 98%;
@@ -86,22 +107,31 @@ All colors MUST be HSL.
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
+    --success: var(--brand-primary);
+    --success-foreground: 0 0% 100%;
+
+    --warning: var(--brand-neutral);
+    --warning-foreground: 210 40% 98%;
+
+    --info: var(--brand-primary);
+    --info-foreground: 0 0% 100%;
+
     --border: 215 25% 27%;
     --input: 215 25% 27%;
-    --ring: 243 75% 65%;
+    --ring: 215 98% 56%;
 
     --sidebar-background: 222 47% 11%;
     --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 243 75% 65%;
+    --sidebar-primary: 215 98% 56%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 215 25% 27%;
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 215 25% 27%;
-    --sidebar-ring: 243 75% 65%;
+    --sidebar-ring: 215 98% 56%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(243 75% 65%) 0%, hsl(243 75% 65%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(215 98% 56%) 0%, hsl(203 92% 54%) 100%);
     --gradient-card: linear-gradient(180deg, hsl(217 33% 17%) 0%, hsl(217 33% 17%) 100%);
-    --shadow-blue: 0 4px 10px -4px hsl(243 75% 65% / 0.22);
+    --shadow-blue: 0 4px 10px -4px hsl(215 98% 56% / 0.22);
   }
 }
 
@@ -112,11 +142,12 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
-    font-family: "Source Sans 3", system-ui, sans-serif;
+    font-family: var(--font-sans);
     font-size: 16px;
   }
 
   h1, h2, h3, .font-display {
-    font-family: "Source Sans 3", system-ui, sans-serif;
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
   }
 }

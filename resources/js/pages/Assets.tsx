@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Search, Edit, Trash2, Package, Loader2 } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Package } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { AddAssetDialog } from "@/components/assets/AddAssetDialog";
@@ -27,9 +27,11 @@ import { EditAssetDialog } from "@/components/assets/EditAssetDialog";
 import { DeleteAssetDialog } from "@/components/assets/DeleteAssetDialog";
 import { ActionTooltip } from "@/components/ui/ActionTooltip";
 import { formatAmount } from "@/lib/financeUtils";
+import { Skeleton } from "@/components/ui/skeleton";
+import { getStatusSoftClass } from "@/lib/statusMap";
 
 type AssetCategory = "mobilier" | "informatique" | "pedagogique" | "sportif" | "vehicule" | "autre";
-type AssetStatus = "neuf" | "bon" | "usage" | "endommage" | "hors_service";
+type AssetStatus = "actif" | "panne" | "vendu";
 
 interface Asset {
   id: string | number;
@@ -58,19 +60,15 @@ const CATEGORY_LABELS: Record<AssetCategory, string> = {
 };
 
 const STATUS_LABELS: Record<AssetStatus, string> = {
-  neuf: "Neuf",
-  bon: "Bon état",
-  usage: "Usagé",
-  endommage: "Endommagé",
-  hors_service: "Hors service",
+  actif: "Actif",
+  panne: "En panne",
+  vendu: "Vendu",
 };
 
 const STATUS_COLORS: Record<AssetStatus, string> = {
-  neuf: "bg-green-500/10 text-green-500 border-green-500/20",
-  bon: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-  usage: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
-  endommage: "bg-orange-500/10 text-orange-500 border-orange-500/20",
-  hors_service: "bg-red-500/10 text-red-500 border-red-500/20",
+  actif: getStatusSoftClass("success"),
+  panne: getStatusSoftClass("warning"),
+  vendu: getStatusSoftClass("neutral"),
 };
 
 export default function Assets() {
@@ -120,14 +118,24 @@ export default function Assets() {
   const stats = {
     total: assets.length,
     totalValue: assets.reduce((sum, a) => sum + (a.acquisition_value || 0), 0),
-    functional: assets.filter((a) => a.status !== "hors_service").length,
-    needsAttention: assets.filter((a) => a.status === "endommage" || a.status === "hors_service").length,
+    functional: assets.filter((a) => a.status === "actif").length,
+    needsAttention: assets.filter((a) => a.status === "panne").length,
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="space-y-6 animate-in fade-in duration-500">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-4 w-80" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <Skeleton key={index} className="h-24 w-full" />
+          ))}
+        </div>
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-64 w-full" />
       </div>
     );
   }

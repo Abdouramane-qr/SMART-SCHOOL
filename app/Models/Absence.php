@@ -47,6 +47,18 @@ class Absence extends Model
     protected static function booted(): void
     {
         static::saving(function (Absence $absence): void {
+            if (! $absence->absence_date && $absence->date) {
+                $absence->absence_date = $absence->date;
+            }
+
+            if (! $absence->date && $absence->absence_date) {
+                $absence->date = $absence->absence_date;
+            }
+
+            if ($absence->is_justified === null && $absence->justified !== null) {
+                $absence->is_justified = (bool) $absence->justified;
+            }
+
             if (($absence->school_id === null || $absence->academic_year_id === null) && $absence->classe_id) {
                 $classe = Classe::query()->find($absence->classe_id);
                 if ($classe) {

@@ -27,6 +27,7 @@ import {
 import { Link } from "react-router-dom";
 import { formatAmount, type Currency } from "@/lib/financeUtils";
 import { useFinanceCurrency } from "@/hooks/useFinanceCurrency";
+import { getStatusOutlineClass, getStatusVariant } from "@/lib/statusMap";
 
 interface ParentDashboardProps {
   userId: string;
@@ -176,7 +177,7 @@ export function ParentDashboard({ userId }: ParentDashboardProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-neutral"></div>
       </div>
     );
   }
@@ -185,10 +186,10 @@ export function ParentDashboard({ userId }: ParentDashboardProps) {
   const paymentProgress = totalDue > 0 ? (totalPaid / totalDue) * 100 : 0;
 
   const getGradeColor = (grade: number) => {
-    if (grade >= 16) return "text-green-600";
-    if (grade >= 14) return "text-blue-600";
-    if (grade >= 10) return "text-yellow-600";
-    return "text-red-600";
+    if (grade >= 16) return "text-primary";
+    if (grade >= 14) return "text-foreground";
+    if (grade >= 10) return "text-brand-neutral";
+    return "text-brand-neutral";
   };
 
   return (
@@ -264,18 +265,18 @@ export function ParentDashboard({ userId }: ParentDashboardProps) {
       ) : (
         children.map((child) => (
           <Card key={child.id} className="overflow-hidden">
-            <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5">
+            <CardHeader className="bg-surface">
               <CardTitle className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <span>{child.name}</span>
                   {child.gradesTrend === "up" && (
-                    <Badge variant="default" className="bg-green-600">
+                    <Badge variant="success">
                       <TrendingUp className="h-3 w-3 mr-1" />
                       En progression
                     </Badge>
                   )}
                   {child.gradesTrend === "down" && (
-                    <Badge variant="destructive">
+                    <Badge variant="warning">
                       <TrendingDown className="h-3 w-3 mr-1" />
                       En baisse
                     </Badge>
@@ -296,7 +297,7 @@ export function ParentDashboard({ userId }: ParentDashboardProps) {
                   </div>
                   <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                     <span className="text-sm">Absences</span>
-                    <Badge variant={child.absencesCount > 5 ? "destructive" : "secondary"}>
+                    <Badge variant={child.absencesCount > 5 ? "warning" : "secondary"}>
                       {child.absencesCount}
                     </Badge>
                   </div>
@@ -304,8 +305,11 @@ export function ParentDashboard({ userId }: ParentDashboardProps) {
                     <span className="text-sm">Paiements</span>
                     <Badge 
                       variant={
-                        child.paymentStatus === "ok" ? "default" :
-                        child.paymentStatus === "partial" ? "secondary" : "destructive"
+                        child.paymentStatus === "ok"
+                          ? getStatusVariant("success")
+                          : child.paymentStatus === "partial"
+                            ? getStatusVariant("warning")
+                            : getStatusVariant("destructive")
                       }
                     >
                       {child.paymentStatus === "ok" ? "À jour" :
@@ -315,7 +319,7 @@ export function ParentDashboard({ userId }: ParentDashboardProps) {
                 </div>
 
                 {/* AI Insights */}
-                <div className="md:col-span-2 p-4 bg-gradient-to-r from-primary/5 to-accent/5 rounded-lg border">
+                <div className="md:col-span-2 p-4 bg-surface rounded-lg border">
                   <h4 className="font-semibold flex items-center gap-2 mb-4">
                     <Lightbulb className="h-4 w-4 text-primary" />
                     Conseils IA
@@ -325,7 +329,7 @@ export function ParentDashboard({ userId }: ParentDashboardProps) {
                   <div className="grid gap-4 md:grid-cols-2">
                     {/* Weak Subjects */}
                     <div>
-                      <p className="text-sm font-medium text-orange-600 mb-2 flex items-center gap-1">
+                      <p className="text-sm font-medium text-foreground mb-2 flex items-center gap-1">
                         <AlertCircle className="h-3 w-3" />
                         Matières à surveiller
                       </p>
@@ -336,7 +340,7 @@ export function ParentDashboard({ userId }: ParentDashboardProps) {
                       ) : (
                         <div className="flex flex-wrap gap-1">
                           {child.weakSubjects.map((s, i) => (
-                            <Badge key={i} variant="outline" className="text-orange-600 border-orange-300">
+                            <Badge key={i} variant="outline" className={getStatusOutlineClass("warning")}>
                               {s}
                             </Badge>
                           ))}
@@ -346,7 +350,7 @@ export function ParentDashboard({ userId }: ParentDashboardProps) {
 
                     {/* Strong Subjects */}
                     <div>
-                      <p className="text-sm font-medium text-green-600 mb-2 flex items-center gap-1">
+                      <p className="text-sm font-medium text-foreground mb-2 flex items-center gap-1">
                         <Award className="h-3 w-3" />
                         Points forts
                       </p>
@@ -357,7 +361,7 @@ export function ParentDashboard({ userId }: ParentDashboardProps) {
                       ) : (
                         <div className="flex flex-wrap gap-1">
                           {child.strongSubjects.map((s, i) => (
-                            <Badge key={i} variant="outline" className="text-green-600 border-green-300">
+                            <Badge key={i} variant="outline" className={getStatusOutlineClass("success")}>
                               {s}
                             </Badge>
                           ))}

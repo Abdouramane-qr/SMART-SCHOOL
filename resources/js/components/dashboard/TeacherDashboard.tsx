@@ -131,7 +131,7 @@ export function TeacherDashboard({ userId }: TeacherDashboardProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-neutral"></div>
       </div>
     );
   }
@@ -199,9 +199,9 @@ export function TeacherDashboard({ userId }: TeacherDashboardProps) {
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* AI Insights - Struggling Students */}
-        <Card className="border-orange-200 dark:border-orange-800">
+        <Card className="border-brand-neutral">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-orange-600">
+            <CardTitle className="flex items-center gap-2 text-foreground">
               <AlertTriangle className="h-5 w-5" />
               Élèves en difficulté
               <Badge variant="secondary" className="ml-auto">
@@ -212,7 +212,7 @@ export function TeacherDashboard({ userId }: TeacherDashboardProps) {
           <CardContent>
             {strugglingStudents.length === 0 ? (
               <div className="text-center py-6">
-                <TrendingUp className="h-10 w-10 mx-auto text-green-500 mb-2" />
+                <TrendingUp className="h-10 w-10 mx-auto text-primary mb-2" />
                 <p className="text-muted-foreground">
                   Tous vos élèves ont une moyenne supérieure à 10
                 </p>
@@ -222,14 +222,14 @@ export function TeacherDashboard({ userId }: TeacherDashboardProps) {
                 {strugglingStudents.map((student) => (
                   <div
                     key={student.id}
-                    className="flex items-center justify-between p-3 rounded-lg bg-orange-50 dark:bg-orange-950/30"
+                    className="flex items-center justify-between p-3 rounded-lg bg-background"
                   >
                     <div>
                       <p className="font-medium">{student.name}</p>
                       <p className="text-sm text-muted-foreground">{student.className}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-orange-600">
+                      <p className="font-bold text-foreground">
                         {student.average.toFixed(1)}/20
                       </p>
                       <p className="text-xs text-muted-foreground">

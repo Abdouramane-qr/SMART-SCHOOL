@@ -45,6 +45,7 @@ import {
   type LaravelFinanceStats,
 } from "@/services/laravelSchoolApi";
 import { formatAmount as formatCurrency, type Currency, CURRENCIES, PAYMENT_STATUS } from "@/lib/financeUtils";
+import { getStatusSoftClass, getStatusTextClass } from "@/lib/statusMap";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { TeacherDashboard } from "@/components/dashboard/TeacherDashboard";
@@ -52,6 +53,7 @@ import { StudentDashboard } from "@/components/dashboard/StudentDashboard";
 import { ParentDashboard } from "@/components/dashboard/ParentDashboard";
 import { ActionTooltip } from "@/components/ui/ActionTooltip";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   BarChart,
   Bar,
@@ -201,11 +203,11 @@ export default function Dashboard() {
   const getStatusBadge = (status?: string) => {
     if (!status) return <Badge variant="outline">-</Badge>;
     if (status === "depense") {
-      return <Badge className="bg-red-500">Dépense</Badge>;
+      return <Badge variant="secondary">Dépense</Badge>;
     }
     const config = PAYMENT_STATUS[status as keyof typeof PAYMENT_STATUS];
     if (!config) return <Badge variant="outline">{status}</Badge>;
-    return <Badge className={config.color}>{config.label}</Badge>;
+    return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
   const handleExportPDF = () => {
@@ -254,8 +256,21 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="space-y-6 animate-in fade-in duration-500">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-4 w-80" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <Skeleton key={index} className="h-28 w-full" />
+          ))}
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          <Skeleton className="h-80 w-full" />
+          <Skeleton className="h-80 w-full" />
+        </div>
+        <Skeleton className="h-64 w-full" />
       </div>
     );
   }
@@ -290,7 +305,7 @@ export default function Dashboard() {
         icon={GraduationCap}
         actions={
           <>
-            <div className="flex items-center gap-3 px-4 py-2 bg-secondary rounded-lg border border-border">
+            <div className="flex items-center gap-3 px-4 py-2 bg-surface rounded-lg border border-border">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">Année:</span>
                 <span className="font-semibold text-secondary-foreground">{schoolYear}</span>
@@ -424,8 +439,8 @@ export default function Dashboard() {
         <Card className="shadow-md">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-                <CheckCircle className="h-5 w-5 text-green-600" />
+              <div className={`h-10 w-10 rounded-full flex items-center justify-center ${getStatusSoftClass("success")}`}>
+                <CheckCircle className={`h-5 w-5 ${getStatusTextClass("success")}`} />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Élèves à jour</p>
@@ -437,8 +452,8 @@ export default function Dashboard() {
         <Card className="shadow-md">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center">
-                <AlertCircle className="h-5 w-5 text-red-600" />
+              <div className="h-10 w-10 rounded-full bg-brand-neutral/10 flex items-center justify-center">
+                <AlertCircle className="h-5 w-5 text-brand-neutral" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Élèves en retard</p>
@@ -450,12 +465,14 @@ export default function Dashboard() {
         <Card className="shadow-md">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center">
-                <Wallet className="h-5 w-5 text-orange-600" />
+              <div className={`h-10 w-10 rounded-full flex items-center justify-center ${getStatusSoftClass("warning")}`}>
+                <Wallet className={`h-5 w-5 ${getStatusTextClass("warning")}`} />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Reste à payer</p>
-                <p className="text-2xl font-bold text-orange-600">{formatAmount(financeStats.totalRemaining)}</p>
+                <p className={`text-2xl font-bold ${getStatusTextClass("warning")}`}>
+                  {formatAmount(financeStats.totalRemaining)}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -463,8 +480,8 @@ export default function Dashboard() {
         <Card className="shadow-md">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                <DollarSign className="h-5 w-5 text-blue-600" />
+              <div className={`h-10 w-10 rounded-full flex items-center justify-center ${getStatusSoftClass("info")}`}>
+                <DollarSign className={`h-5 w-5 ${getStatusTextClass("info")}`} />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Masse salariale</p>
@@ -621,13 +638,15 @@ export default function Dashboard() {
                     <TableRow key={activity.id}>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
-                            activity.type === "payment"
-                              ? "bg-green-100 text-green-600"
-                              : activity.type === "expense"
-                              ? "bg-red-100 text-red-600"
-                              : "bg-blue-100 text-blue-600"
-                          }`}>
+                          <div
+                            className={`h-8 w-8 rounded-full flex items-center justify-center ${
+                              activity.type === "payment"
+                                ? getStatusSoftClass("success")
+                                : activity.type === "expense"
+                                  ? getStatusSoftClass("neutral")
+                                  : getStatusSoftClass("info")
+                            }`}
+                          >
                             <IconComponent className="h-4 w-4" />
                           </div>
                           <span className="font-medium">{activity.title}</span>

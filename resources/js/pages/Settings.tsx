@@ -185,21 +185,21 @@ export default function Settings() {
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
             <div className="flex items-center gap-3 p-3 bg-background rounded-lg border">
-              <Shield className="h-5 w-5 text-green-600" />
+              <Shield className="h-5 w-5 text-primary" />
               <div>
                 <p className="text-sm font-medium">Sécurité</p>
                 <p className="text-xs text-muted-foreground">RLS activé</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3 bg-background rounded-lg border">
-              <Database className="h-5 w-5 text-blue-600" />
+              <Database className="h-5 w-5 text-primary" />
               <div>
                 <p className="text-sm font-medium">Base de données</p>
                 <p className="text-xs text-muted-foreground">Connectée</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3 bg-background rounded-lg border">
-              <Bell className="h-5 w-5 text-orange-600" />
+              <Bell className="h-5 w-5 text-primary" />
               <div>
                 <p className="text-sm font-medium">Notifications</p>
                 <p className="text-xs text-muted-foreground">Temps réel activé</p>

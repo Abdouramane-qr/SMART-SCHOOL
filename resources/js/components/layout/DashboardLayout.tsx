@@ -94,7 +94,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 >
                   <Mail className="h-5 w-5" />
                   {unreadMessages > 0 && (
-                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-xs flex items-center justify-center font-medium">
+                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-medium">
                       {unreadMessages > 9 ? "9+" : unreadMessages}
                     </span>
                   )}

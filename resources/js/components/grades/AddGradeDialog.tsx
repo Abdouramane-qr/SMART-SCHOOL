@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -69,7 +69,18 @@ export function AddGradeDialog({ onSuccess }: AddGradeDialogProps) {
     queryFn: laravelSchoolYearsApi.getAll,
   });
 
+  const { data: currentYear } = useQuery({
+    queryKey: ["current-school-year"],
+    queryFn: laravelSchoolYearsApi.getCurrent,
+  });
+
   const students = studentsResponse?.items ?? [];
+
+  useEffect(() => {
+    if (!formData.school_year_id && currentYear?.id) {
+      setFormData((prev) => ({ ...prev, school_year_id: String(currentYear.id) }));
+    }
+  }, [currentYear, formData.school_year_id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,7 +143,7 @@ export function AddGradeDialog({ onSuccess }: AddGradeDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-primary shadow-sm">
+        <Button>
           <Plus className="mr-2 h-4 w-4" />
           Nouvelle note
         </Button>
@@ -150,7 +161,22 @@ export function AddGradeDialog({ onSuccess }: AddGradeDialogProps) {
               <Label htmlFor="student">Élève *</Label>
               <Select
                 value={formData.student_id}
-                onValueChange={(value) => setFormData({ ...formData, student_id: value })}
+                onValueChange={(value) => {
+                  const selected = students.find((student) => String(student.id) === value);
+                  const classId = selected?.classe?.id ?? selected?.class?.id ?? selected?.classe_id;
+                  const schoolYearId =
+                    selected?.classe?.school_year_id ??
+                    selected?.classe?.academic_year_id ??
+                    selected?.class?.school_year_id ??
+                    selected?.class?.academic_year_id;
+
+                  setFormData({
+                    ...formData,
+                    student_id: value,
+                    class_id: classId ? String(classId) : formData.class_id,
+                    school_year_id: schoolYearId ? String(schoolYearId) : formData.school_year_id,
+                  });
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un élève" />

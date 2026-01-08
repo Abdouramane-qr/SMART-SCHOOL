@@ -9,7 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { User, Mail, Phone, MapPin, Save, Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { User, Mail, Phone, MapPin, Save } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { laravelAuthApi } from "@/services/laravelAuthApi";
@@ -133,8 +134,15 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="space-y-6 animate-in fade-in duration-500">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-40" />
+          <Skeleton className="h-4 w-60" />
+        </div>
+        <div className="grid gap-6 md:grid-cols-3">
+          <Skeleton className="h-72 w-full" />
+          <Skeleton className="h-72 w-full md:col-span-2" />
+        </div>
       </div>
     );
   }
@@ -254,7 +262,7 @@ export default function Profile() {
               </div>
 
               <div className="flex justify-end">
-                <Button type="submit" disabled={saving} className="bg-primary">
+                <Button type="submit" disabled={saving}>
                   {saving ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />

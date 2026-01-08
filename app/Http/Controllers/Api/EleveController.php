@@ -133,6 +133,11 @@ class EleveController extends Controller
             'parent_name' => ['nullable', 'string', 'max:100'],
             'parent_phone' => ['nullable', 'string', 'max:20'],
             'parent_email' => ['nullable', 'email', 'max:255'],
+        ], [
+            'classe_id.required' => 'La classe est obligatoire.',
+            'first_name.required' => 'Le prenom est obligatoire.',
+            'birth_date.date' => 'La date de naissance est invalide.',
+            'parent_email.email' => "L'email du parent est invalide.",
         ]);
 
         if (empty($validated['school_id'])) {
@@ -191,6 +196,9 @@ class EleveController extends Controller
             'parent_name' => ['sometimes', 'nullable', 'string', 'max:100'],
             'parent_phone' => ['sometimes', 'nullable', 'string', 'max:20'],
             'parent_email' => ['sometimes', 'nullable', 'email', 'max:255'],
+        ], [
+            'birth_date.date' => 'La date de naissance est invalide.',
+            'parent_email.email' => "L'email du parent est invalide.",
         ]);
 
         if (array_key_exists('classe_id', $validated) && empty($validated['school_id'])) {

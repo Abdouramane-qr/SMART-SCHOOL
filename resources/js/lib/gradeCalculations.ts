@@ -123,21 +123,21 @@ export function getAppreciation(average: number): {
   variant: "default" | "secondary" | "destructive" | "outline";
 } {
   if (average >= 16) {
-    return { label: "Excellent", color: "text-green-600", variant: "default" };
+    return { label: "Excellent", color: "text-primary", variant: "default" };
   }
   if (average >= 14) {
-    return { label: "Bien", color: "text-blue-600", variant: "secondary" };
+    return { label: "Bien", color: "text-foreground", variant: "secondary" };
   }
   if (average >= 12) {
-    return { label: "Assez bien", color: "text-cyan-600", variant: "secondary" };
+    return { label: "Assez bien", color: "text-foreground", variant: "secondary" };
   }
   if (average >= 10) {
-    return { label: "Passable", color: "text-yellow-600", variant: "outline" };
+    return { label: "Passable", color: "text-brand-neutral", variant: "outline" };
   }
   if (average >= 8) {
-    return { label: "Insuffisant", color: "text-orange-600", variant: "destructive" };
+    return { label: "Insuffisant", color: "text-brand-neutral", variant: "outline" };
   }
-  return { label: "Très insuffisant", color: "text-red-600", variant: "destructive" };
+  return { label: "Très insuffisant", color: "text-brand-neutral", variant: "outline" };
 }
 
 /**
