@@ -10,7 +10,7 @@ class FinanceController extends Controller
 {
     public function stats(Request $request, FinanceService $financeService)
     {
-        $schoolId = $request->integer('school_id');
+        $schoolId = $this->resolveSchoolId($request);
         $academicYearId = $request->integer('academic_year_id');
 
         $data = $financeService->getStats($schoolId, $academicYearId);

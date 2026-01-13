@@ -99,9 +99,11 @@ export function ExportBulletinDialog() {
       const gradesData = studentGrades.map((g: any) => {
         const subject = subjects.find((s) => String(s.id) === g.subject_id);
         return {
+          subject_id: g.subject_id,
           subject_name: subject?.name || "Inconnue",
           coefficient: subject?.coefficient || 1,
           grade: g.grade,
+          weight: g.weight || 1,
         };
       });
 

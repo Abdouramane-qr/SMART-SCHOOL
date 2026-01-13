@@ -13,9 +13,19 @@ use Illuminate\Support\Facades\Cache;
 
 class TimetableController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(Timetable::class, 'timetable');
+    }
+
     public function index(Request $request)
     {
-        $schoolId = $request->integer('school_id') ?: $request->user()?->school_id;
+        $schoolId = $this->resolveSchoolId($request);
+        $user = $request->user();
+        $teacherId = null;
+        if ($user?->hasRole('enseignant')) {
+            $teacherId = $user->enseignant?->id;
+        }
         $academicYearId = $request->integer('academic_year_id') ?: $request->integer('school_year_id');
         if (empty($academicYearId) && ! empty($schoolId)) {
             $academicYearId = AcademicYear::query()
@@ -31,7 +41,7 @@ class TimetableController extends Controller
         $tags = CacheKey::tags($schoolId, $academicYearId);
         $cache = $tags ? Cache::tags($tags) : Cache::store();
 
-        $result = $cache->remember($key, now()->addMinutes(5), function () use ($request, $perPage) {
+        $result = $cache->remember($key, now()->addMinutes(5), function () use ($request, $perPage, $teacherId, $schoolId, $academicYearId) {
             $query = Timetable::query()
                 ->with(['classe', 'matiere', 'teacher.user', 'classroom'])
                 ->orderBy('day_of_week')
@@ -51,6 +61,10 @@ class TimetableController extends Controller
 
             if ($request->filled('teacher_id')) {
                 $query->where('teacher_id', $request->integer('teacher_id'));
+            }
+
+            if ($teacherId) {
+                $query->where('teacher_id', $teacherId);
             }
 
             return $perPage ? $query->paginate($perPage) : $query->get();
@@ -75,6 +89,14 @@ class TimetableController extends Controller
             'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
         ]);
 
+        $user = $request->user();
+        if ($user?->hasRole('enseignant')) {
+            return response()->json(['message' => 'Accès refusé à la modification des emplois du temps.'], 403);
+        }
+
+        $schoolId = $this->resolveSchoolId($request);
+        $validated['school_id'] = $schoolId;
+
         if (empty($validated['matiere_id']) && ! empty($validated['subject_id'])) {
             $validated['matiere_id'] = $validated['subject_id'];
         }
@@ -93,6 +115,10 @@ class TimetableController extends Controller
                     $validated['academic_year_id'] = $classe->academic_year_id;
                 }
             }
+        }
+
+        if ($conflict = $this->findConflictMessage($validated)) {
+            return response()->json(['message' => $conflict], 422);
         }
 
         $entry = Timetable::create($validated);
@@ -117,6 +143,14 @@ class TimetableController extends Controller
             'end_time' => ['sometimes', 'date_format:H:i', 'after:start_time'],
         ]);
 
+        $user = $request->user();
+        if ($user?->hasRole('enseignant')) {
+            return response()->json(['message' => 'Accès refusé à la modification des emplois du temps.'], 403);
+        }
+
+        $schoolId = $this->resolveSchoolId($request);
+        $validated['school_id'] = $schoolId;
+
         if (array_key_exists('subject_id', $validated) && empty($validated['matiere_id'])) {
             $validated['matiere_id'] = $validated['subject_id'];
         }
@@ -137,6 +171,21 @@ class TimetableController extends Controller
             }
         }
 
+        $payload = array_merge([
+            'school_id' => $timetable->school_id,
+            'academic_year_id' => $timetable->academic_year_id,
+            'class_id' => $timetable->class_id,
+            'teacher_id' => $timetable->teacher_id,
+            'classroom_id' => $timetable->classroom_id,
+            'day_of_week' => $timetable->day_of_week,
+            'start_time' => $timetable->start_time,
+            'end_time' => $timetable->end_time,
+        ], $validated);
+
+        if ($conflict = $this->findConflictMessage($payload, $timetable->id)) {
+            return response()->json(['message' => $conflict], 422);
+        }
+
         $timetable->update($validated);
         Cache::tags(CacheKey::tags($timetable->school_id, $timetable->academic_year_id))->flush();
 
@@ -145,6 +194,11 @@ class TimetableController extends Controller
 
     public function destroy(Timetable $timetable)
     {
+        $user = request()->user();
+        if ($user?->hasRole('enseignant')) {
+            return response()->json(['message' => 'Accès refusé à la modification des emplois du temps.'], 403);
+        }
+
         $schoolId = $timetable->school_id;
         $academicYearId = $timetable->academic_year_id;
         $timetable->delete();
@@ -152,5 +206,80 @@ class TimetableController extends Controller
         Cache::tags(CacheKey::tags($schoolId, $academicYearId))->flush();
 
         return response()->noContent();
+    }
+
+    private function findConflictMessage(array $payload, ?int $excludeId = null): ?string
+    {
+        if (
+            empty($payload['day_of_week']) ||
+            empty($payload['start_time']) ||
+            empty($payload['end_time']) ||
+            empty($payload['class_id'])
+        ) {
+            return null;
+        }
+
+        $startMinutes = $this->timeToMinutes($payload['start_time']);
+        $endMinutes = $this->timeToMinutes($payload['end_time']);
+
+        $query = Timetable::query()
+            ->where('day_of_week', $payload['day_of_week']);
+
+        if (! empty($payload['school_id'])) {
+            $query->where('school_id', $payload['school_id']);
+        }
+
+        if (! empty($payload['academic_year_id'])) {
+            $query->where('academic_year_id', $payload['academic_year_id']);
+        }
+
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+
+        $query->where(function ($builder) use ($payload) {
+            $builder->where('class_id', $payload['class_id']);
+            if (! empty($payload['teacher_id'])) {
+                $builder->orWhere('teacher_id', $payload['teacher_id']);
+            }
+            if (! empty($payload['classroom_id'])) {
+                $builder->orWhere('classroom_id', $payload['classroom_id']);
+            }
+        });
+
+        $entries = $query->get(['class_id', 'teacher_id', 'classroom_id', 'start_time', 'end_time']);
+
+        foreach ($entries as $entry) {
+            $entryStart = $this->timeToMinutes($entry->start_time);
+            $entryEnd = $this->timeToMinutes($entry->end_time);
+            if (! $this->overlaps($startMinutes, $endMinutes, $entryStart, $entryEnd)) {
+                continue;
+            }
+
+            if ((int) $entry->class_id === (int) $payload['class_id']) {
+                return 'Conflit: ce créneau est deja utilise pour cette classe.';
+            }
+
+            if (! empty($payload['teacher_id']) && (int) $entry->teacher_id === (int) $payload['teacher_id']) {
+                return "Conflit: l'enseignant a deja un cours sur ce créneau.";
+            }
+
+            if (! empty($payload['classroom_id']) && (int) $entry->classroom_id === (int) $payload['classroom_id']) {
+                return 'Conflit: la salle est deja occupee sur ce créneau.';
+            }
+        }
+
+        return null;
+    }
+
+    private function timeToMinutes(string $time): int
+    {
+        [$hours, $minutes] = array_map('intval', explode(':', $time));
+        return ($hours * 60) + $minutes;
+    }
+
+    private function overlaps(int $startA, int $endA, int $startB, int $endB): bool
+    {
+        return $startA < $endB && $endA > $startB;
     }
 }

@@ -16,6 +16,7 @@ class UserRoleController extends Controller
         ]);
 
         $user = User::findOrFail($validated['user_id']);
+        $this->authorize('update', $user);
         if (! $user->hasRole($validated['role'])) {
             $user->assignRole($validated['role']);
         }
@@ -36,6 +37,7 @@ class UserRoleController extends Controller
         ]);
 
         $user = User::findOrFail($validated['user_id']);
+        $this->authorize('update', $user);
         $user->removeRole($validated['role']);
         // Enforce role-scoped permissions only (no per-user overrides).
         $user->syncPermissions([]);

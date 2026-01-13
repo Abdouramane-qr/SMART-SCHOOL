@@ -42,7 +42,7 @@ export const exportDashboardToPDF = (data: ExportData) => {
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(22);
   doc.setFont("helvetica", "bold");
-  doc.text("SMART SCHOOL", 14, 20);
+  doc.text("SMART-SCHOOL", 14, 20);
   
   doc.setFontSize(11);
   doc.setFont("helvetica", "normal");
@@ -176,7 +176,7 @@ export const exportDashboardToPDF = (data: ExportData) => {
     doc.setFontSize(8);
     doc.setTextColor(128, 128, 128);
     doc.text(
-      `Page ${i} sur ${pageCount} - SMART SCHOOL Gestion Scolaire`,
+      `Page ${i} sur ${pageCount} - SMART-SCHOOL Gestion Scolaire`,
       pageWidth / 2,
       pageHeight - 10,
       { align: "center" }
@@ -193,7 +193,7 @@ export const exportDashboardToExcel = (data: ExportData) => {
   const currencySymbol = CURRENCIES[currency]?.symbol ?? currency;
   
   // Header
-  csvContent += "SMART SCHOOL - Rapport du Tableau de Bord\n";
+  csvContent += "SMART-SCHOOL - Rapport du Tableau de Bord\n";
   csvContent += `Année scolaire: ${data.schoolYear}\n`;
   csvContent += `Date d'export: ${data.exportDate}\n\n`;
   csvContent += `Devise: ${currencySymbol} (${currency})\n\n`;

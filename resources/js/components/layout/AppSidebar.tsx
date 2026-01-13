@@ -204,7 +204,7 @@ export function AppSidebar() {
                 <GraduationCap className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h1 className="font-bold text-lg text-sidebar-foreground">SMART SCHOOL</h1>
+                <h1 className="font-bold text-lg text-sidebar-foreground">SMART-SCHOOL</h1>
                 <p className="text-xs text-muted-foreground">Gestion Scolaire</p>
               </div>
             </div>

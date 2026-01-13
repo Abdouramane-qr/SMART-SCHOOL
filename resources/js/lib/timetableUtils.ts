@@ -11,8 +11,12 @@ export const TIME_RANGE = {
 // Générer les créneaux horaires de 07:00 à 18:00
 export function generateTimeSlots(): string[] {
   const slots: string[] = [];
-  for (let hour = TIME_RANGE.start; hour < TIME_RANGE.end; hour++) {
-    slots.push(`${hour.toString().padStart(2, "0")}:00`);
+  const startMinutes = TIME_RANGE.start * 60;
+  const endMinutes = TIME_RANGE.end * 60;
+  for (let minutes = startMinutes; minutes < endMinutes; minutes += 30) {
+    const hour = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    slots.push(`${hour.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}`);
   }
   return slots;
 }

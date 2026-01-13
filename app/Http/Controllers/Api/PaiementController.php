@@ -12,12 +12,17 @@ use Illuminate\Support\Facades\Cache;
 
 class PaiementController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(Paiement::class, 'paiement');
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
-        $schoolId = $request->integer('school_id');
+        $schoolId = $this->resolveSchoolId($request);
         $academicYearId = $request->integer('academic_year_id');
         $perPage = $request->integer('per_page') ?: 15;
         $page = $request->integer('page') ?: 1;
@@ -29,7 +34,7 @@ class PaiementController extends Controller
         $tags = CacheKey::tags($schoolId, $academicYearId);
         $cache = $tags ? Cache::tags($tags) : Cache::store();
 
-        $result = $cache->remember($key, now()->addMinutes(5), function () use ($request, $perPage, $status, $method) {
+        $result = $cache->remember($key, now()->addMinutes(5), function () use ($request, $perPage, $status, $method, $schoolId, $academicYearId) {
             $query = Paiement::query()
                 ->select([
                     'paiements.id',
@@ -51,12 +56,12 @@ class PaiementController extends Controller
                 ->orderByDesc('payment_date')
                 ->orderByDesc('id');
 
-            if ($request->filled('school_id')) {
-                $query->where('school_id', $request->integer('school_id'));
+            if ($schoolId) {
+                $query->where('school_id', $schoolId);
             }
 
-            if ($request->filled('academic_year_id')) {
-                $yearId = $request->integer('academic_year_id');
+            if ($academicYearId) {
+                $yearId = $academicYearId;
                 $query->whereHas('eleve.classe', function ($builder) use ($yearId) {
                     $builder->where('academic_year_id', $yearId);
                 });
@@ -110,6 +115,9 @@ class PaiementController extends Controller
             'paid_amount.min' => 'Le montant paye doit etre positif.',
         ]);
 
+        $schoolId = $this->resolveSchoolId($request);
+        $validated['school_id'] = $schoolId;
+
         $paiement = app(FinanceService::class)->createPayment($validated);
 
         return new PaiementResource($paiement->load(['eleve', 'school']));
@@ -154,6 +162,9 @@ class PaiementController extends Controller
             'amount.min' => 'Le montant doit etre positif.',
             'paid_amount.min' => 'Le montant paye doit etre positif.',
         ]);
+
+        $schoolId = $this->resolveSchoolId($request);
+        $validated['school_id'] = $schoolId;
 
         $paiement = app(FinanceService::class)->updatePayment($paiement, $validated);
 

@@ -211,7 +211,7 @@ export function AddStudentDialog({ isOpen, onClose, onSuccess }: AddStudentDialo
                     </FormControl>
                     <SelectContent>
                       {classes.map((cls) => (
-                        <SelectItem key={cls.id} value={cls.id}>
+                        <SelectItem key={cls.id} value={String(cls.id)}>
                           {cls.level} {cls.name}
                         </SelectItem>
                       ))}

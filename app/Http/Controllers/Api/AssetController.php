@@ -12,9 +12,14 @@ use Illuminate\Support\Facades\Cache;
 
 class AssetController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(Asset::class, 'asset');
+    }
+
     public function index(Request $request)
     {
-        $schoolId = $request->integer('school_id');
+        $schoolId = $this->resolveSchoolId($request);
         $perPage = $request->integer('per_page') ?: 15;
         $page = $request->integer('page') ?: 1;
         $status = trim((string) $request->string('status'));
@@ -24,11 +29,11 @@ class AssetController extends Controller
         $tags = CacheKey::tags($schoolId, null);
         $cache = $tags ? Cache::tags($tags) : Cache::store();
 
-        $result = $cache->remember($key, now()->addMinutes(5), function () use ($request, $perPage, $status) {
+        $result = $cache->remember($key, now()->addMinutes(5), function () use ($perPage, $status, $schoolId) {
             $query = Asset::query()->orderByDesc('created_at');
 
-            if ($request->filled('school_id')) {
-                $query->where('school_id', $request->integer('school_id'));
+            if ($schoolId) {
+                $query->where('school_id', $schoolId);
             }
 
             if ($status !== '') {
@@ -59,6 +64,9 @@ class AssetController extends Controller
             'notes' => ['nullable', 'string'],
         ]);
 
+        $schoolId = $this->resolveSchoolId($request);
+        $validated['school_id'] = $schoolId;
+
         $validated['created_by'] = $request->user()?->id;
 
         $asset = app(AssetService::class)->create($validated);
@@ -88,6 +96,9 @@ class AssetController extends Controller
             'warranty_end_date' => ['sometimes', 'nullable', 'date'],
             'notes' => ['sometimes', 'nullable', 'string'],
         ]);
+
+        $schoolId = $this->resolveSchoolId($request);
+        $validated['school_id'] = $schoolId;
 
         $asset = app(AssetService::class)->update($asset, $validated);
 

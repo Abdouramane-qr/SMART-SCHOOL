@@ -7,12 +7,15 @@ use App\Models\School;
 use App\Filament\Widgets\FinanceMonthlyChart;
 use App\Filament\Widgets\FinanceStatsOverview;
 use App\Filament\Widgets\SchoolStatsOverview;
+use App\Filament\Concerns\HasSystemAlerts;
 use Filament\Pages\Page;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
 
 class Dashboard extends Page
 {
+    use HasSystemAlerts;
+
     protected static ?string $navigationIcon = 'heroicon-o-home';
     protected static ?string $title = 'Dashboard';
     protected static string $view = 'filament.pages.dashboard';
@@ -22,6 +25,8 @@ class Dashboard extends Page
 
     public function mount(): void
     {
+        $this->notifySystemAlerts();
+
         $user = auth()->user();
         $this->schoolId = request()->integer('school_id') ?: $user?->school_id;
         $this->academicYearId = request()->integer('academic_year_id');
@@ -51,10 +56,7 @@ class Dashboard extends Page
 
     protected function getFooterWidgets(): array
     {
-        return [
-            AccountWidget::class,
-            FilamentInfoWidget::class,
-        ];
+        return [];
     }
 
     public function getWidgetData(): array

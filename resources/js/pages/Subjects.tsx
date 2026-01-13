@@ -19,6 +19,8 @@ import { AddSubjectDialog } from "@/components/subjects/AddSubjectDialog";
 import { EditSubjectDialog } from "@/components/subjects/EditSubjectDialog";
 import { DeleteSubjectDialog } from "@/components/subjects/DeleteSubjectDialog";
 import { StatsCard } from "@/components/dashboard/StatsCard";
+import { ImportExportActions } from "@/components/ImportExportActions";
+import { RoleGuard } from "@/components/RoleGuard";
 
 type Subject = LaravelSubject & {
   created_at?: string | null;
@@ -58,7 +60,12 @@ export default function Subjects() {
             {totalSubjects} matière{totalSubjects > 1 ? "s" : ""} enregistrée{totalSubjects > 1 ? "s" : ""}
           </p>
         </div>
-        <AddSubjectDialog onSuccess={refetch} />
+        <div className="flex gap-2">
+          <RoleGuard allowedRoles={["admin"]}>
+            <ImportExportActions entity="subjects" onImported={refetch} />
+          </RoleGuard>
+          <AddSubjectDialog onSuccess={refetch} />
+        </div>
       </div>
 
       {/* Statistics */}
@@ -108,8 +115,10 @@ export default function Subjects() {
               ))}
             </div>
           ) : filteredSubjects.length === 0 ? (
-            <div className="text-center py-12">
-              <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <div className="text-center py-12 ui-empty-state rounded-xl">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full ui-empty-state-icon">
+                <BookOpen className="h-6 w-6" />
+              </div>
               <p className="text-muted-foreground">Aucune matière trouvée</p>
             </div>
           ) : (

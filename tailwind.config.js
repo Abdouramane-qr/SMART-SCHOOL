@@ -8,6 +8,9 @@ export default {
     content: [
         './vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php',
         './storage/framework/views/*.php',
+        './vendor/filament/**/*.blade.php',
+        './vendor/filament/**/*.php',
+        './vendor/filament/**/*.js',
         './resources/views/**/*.blade.php',
         './resources/js/**/*.{js,jsx,ts,tsx}',
     ],
@@ -25,6 +28,23 @@ export default {
                 display: ['Source Serif 4', 'Source Sans 3', ...defaultTheme.fontFamily.sans],
             },
             colors: {
+                light: {
+                    app: 'hsl(var(--light-app))',
+                    card: 'hsl(var(--light-card))',
+                    text: 'hsl(var(--light-text))',
+                    muted: 'hsl(var(--light-muted-text))',
+                    border: 'hsl(var(--light-border))',
+                },
+                dark: {
+                    app: 'hsl(var(--dark-app))',
+                    card: 'hsl(var(--dark-card))',
+                    text: 'hsl(var(--dark-text))',
+                    muted: 'hsl(var(--dark-muted-text))',
+                    border: 'hsl(var(--dark-border))',
+                },
+                app: 'hsl(var(--bg-app))',
+                main: 'hsl(var(--text-main))',
+                mutedtext: 'hsl(var(--text-muted))',
                 border: 'hsl(var(--border))',
                 input: 'hsl(var(--input))',
                 ring: 'hsl(var(--ring))',

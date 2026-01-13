@@ -12,17 +12,22 @@ use Illuminate\Support\Facades\Cache;
 
 class SchoolYearController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(AcademicYear::class, 'school_year');
+    }
+
     public function index(Request $request)
     {
-        $schoolId = $request->integer('school_id');
+        $schoolId = $this->resolveSchoolId($request);
         $key = CacheKey::key('school_years:index', $schoolId, null);
         $tags = CacheKey::tags($schoolId, null);
         $cache = $tags ? Cache::tags($tags) : Cache::store();
 
-        $result = $cache->remember($key, now()->addMinutes(5), function () use ($request) {
+        $result = $cache->remember($key, now()->addMinutes(5), function () use ($schoolId) {
             $query = AcademicYear::query()->orderByDesc('start_date');
-            if ($request->filled('school_id')) {
-                $query->where('school_id', $request->integer('school_id'));
+            if ($schoolId) {
+                $query->where('school_id', $schoolId);
             }
             return $query->get();
         });
@@ -44,6 +49,9 @@ class SchoolYearController extends Controller
             'end_date' => ['required', 'date'],
             'is_current' => ['nullable', 'boolean'],
         ]);
+
+        $schoolId = $this->resolveSchoolId($request);
+        $validated['school_id'] = $schoolId;
 
         if (empty($validated['school_id'])) {
             $validated['school_id'] = $request->user()?->school_id ?? School::query()->value('id');
@@ -78,6 +86,9 @@ class SchoolYearController extends Controller
             'end_date' => ['sometimes', 'date'],
             'is_current' => ['sometimes', 'boolean'],
         ]);
+
+        $schoolId = $this->resolveSchoolId($request);
+        $validated['school_id'] = $schoolId;
 
         if (array_key_exists('is_current', $validated)) {
             $validated['is_active'] = (bool) $validated['is_current'];

@@ -34,6 +34,7 @@ interface AuditLog {
 export function StudentAuditModal({ studentId, studentName, isOpen, onClose }: StudentAuditModalProps) {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen && studentId) {
@@ -46,9 +47,12 @@ export function StudentAuditModal({ studentId, studentName, isOpen, onClose }: S
 
     try {
       setLoading(true);
+      setError(null);
       const data = await laravelStudentAuditsApi.getByStudentId(studentId);
       setLogs(data || []);
     } catch (error) {
+      setError("Historique indisponible pour le moment.");
+      setLogs([]);
       toast.error("Erreur lors du chargement de l'historique");
     } finally {
       setLoading(false);
@@ -104,6 +108,17 @@ export function StudentAuditModal({ studentId, studentName, isOpen, onClose }: S
         {loading ? (
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-neutral"></div>
+          </div>
+        ) : error ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <p>{error}</p>
+            <button
+              type="button"
+              className="mt-4 text-sm text-primary underline"
+              onClick={fetchAuditLogs}
+            >
+              Réessayer
+            </button>
           </div>
         ) : logs.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">

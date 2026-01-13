@@ -12,9 +12,14 @@ use Illuminate\Support\Facades\Cache;
 
 class ClassroomController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(Classroom::class, 'classroom');
+    }
+
     public function index(Request $request)
     {
-        $schoolId = $request->integer('school_id');
+        $schoolId = $this->resolveSchoolId($request);
         $perPage = $request->integer('per_page');
         $page = $request->integer('page') ?: 1;
         $search = trim((string) $request->string('q'));
@@ -28,12 +33,12 @@ class ClassroomController extends Controller
         $tags = CacheKey::tags($schoolId, null);
         $cache = $tags ? Cache::tags($tags) : Cache::store();
 
-        $result = $cache->remember($key, now()->addMinutes(5), function () use ($request, $perPage, $search) {
+        $result = $cache->remember($key, now()->addMinutes(5), function () use ($perPage, $search, $schoolId) {
             $query = Classroom::query()
                 ->orderBy('name');
 
-            if ($request->filled('school_id')) {
-                $query->where('school_id', $request->integer('school_id'));
+            if ($schoolId) {
+                $query->where('school_id', $schoolId);
             }
 
             if ($search !== '') {
@@ -62,6 +67,9 @@ class ClassroomController extends Controller
             'equipment.*' => ['string', 'max:100'],
         ]);
 
+        $schoolId = $this->resolveSchoolId($request);
+        $validated['school_id'] = $schoolId;
+
         if (empty($validated['school_id'])) {
             $validated['school_id'] = $request->user()?->school_id ?? School::query()->value('id');
         }
@@ -83,6 +91,9 @@ class ClassroomController extends Controller
             'equipment' => ['sometimes', 'nullable', 'array'],
             'equipment.*' => ['string', 'max:100'],
         ]);
+
+        $schoolId = $this->resolveSchoolId($request);
+        $validated['school_id'] = $schoolId;
 
         $classroom->update($validated);
         Cache::tags(CacheKey::tags($classroom->school_id, null))->flush();

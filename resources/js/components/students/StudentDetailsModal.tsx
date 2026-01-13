@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -30,6 +31,15 @@ interface StudentDetailsModalProps {
     full_name: string;
     student_id: string;
     class_name: string | null;
+    first_name?: string | null;
+    last_name?: string | null;
+    gender?: string | null;
+    birth_date?: string | null;
+    date_of_birth?: string | null;
+    address?: string | null;
+    parent_name?: string | null;
+    parent_phone?: string | null;
+    parent_email?: string | null;
   };
   currency?: Currency;
   isOpen: boolean;
@@ -45,6 +55,27 @@ export function StudentDetailsModal({
   const [studentDetails, setStudentDetails] = useState<any>(null);
   const [payments, setPayments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const resolveApiError = (err: unknown) => {
+    if (err && typeof err === "object") {
+      const status = (err as { status?: number }).status;
+      const code = (err as { code?: string }).code;
+      if (status === 409 || code === "active_school_missing") {
+        return "Aucune école active n'est définie. Activez une école pour continuer.";
+      }
+      if (status === 403) {
+        if (code === "school_mismatch") {
+          return "Cet élève n'appartient pas à l'école active.";
+        }
+        return "Accès refusé. Vos permissions ne permettent pas d'accéder à cette fiche.";
+      }
+      if ((err as { message?: string }).message) {
+        return (err as { message: string }).message;
+      }
+    }
+    return "Impossible de charger la fiche élève.";
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -55,17 +86,34 @@ export function StudentDetailsModal({
   const fetchStudentDetails = async () => {
     try {
       setLoading(true);
+      setError(null);
       const studentData = await laravelStudentsApi.getById(student.id);
       const { payments: studentPayments } = normalizeStudentPayments(studentData);
 
       setStudentDetails(studentData);
       setPayments(studentPayments || []);
-    } catch (error: any) {
-      toast.error("Erreur lors du chargement des détails");
-      console.error(error);
+    } catch (err: unknown) {
+      const message = resolveApiError(err);
+      toast.error(message);
+      setError(message);
+      console.error(err);
     } finally {
       setLoading(false);
     }
+  };
+
+  const displayValue = (value?: string | number | null) => {
+    if (value === null || value === undefined || value === "") {
+      return "Non renseigné";
+    }
+    return String(value);
+  };
+
+  const displayDate = (value?: string | null) => {
+    if (!value) {
+      return "Non renseigné";
+    }
+    return new Date(value).toLocaleDateString("fr-FR");
   };
 
   const getStatusBadge = (status: string) => {
@@ -78,16 +126,34 @@ export function StudentDetailsModal({
     return <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>;
   };
 
+  const resolvedStudent = studentDetails ? { ...student, ...studentDetails } : student;
+  const resolvedClass =
+    studentDetails != null
+      ? normalizeStudentClasse(studentDetails || {})
+      : student.class_name;
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Détails de l'élève</DialogTitle>
+          <DialogDescription>Informations personnelles, parentales et financières.</DialogDescription>
         </DialogHeader>
 
         {loading ? (
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-neutral"></div>
+          </div>
+        ) : error ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <p>{error}</p>
+            <button
+              type="button"
+              className="mt-4 text-sm text-primary underline"
+              onClick={fetchStudentDetails}
+            >
+              Réessayer
+            </button>
           </div>
         ) : (
           <div className="space-y-6">
@@ -95,31 +161,31 @@ export function StudentDetailsModal({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-muted-foreground">ID Élève</p>
-                <p className="font-medium">{studentDetails?.student_id}</p>
+                <p className="font-medium">{displayValue(resolvedStudent?.student_id)}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Nom complet</p>
-                <p className="font-medium">{normalizeStudentName(studentDetails || {})}</p>
+                <p className="font-medium">
+                  {displayValue(normalizeStudentName(resolvedStudent || {}) || student.full_name)}
+                </p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Classe</p>
-                <p className="font-medium">{normalizeStudentClasse(studentDetails || {}) || "Non assigné"}</p>
+                <p className="font-medium">{resolvedClass || "Non assigné"}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Date de naissance</p>
                 <p className="font-medium">
-                  {studentDetails?.birth_date || studentDetails?.date_of_birth
-                    ? new Date(studentDetails?.birth_date || studentDetails?.date_of_birth).toLocaleDateString("fr-FR")
-                    : "N/A"}
+                  {displayDate(resolvedStudent?.birth_date || resolvedStudent?.date_of_birth)}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Genre</p>
-                <p className="font-medium">{studentDetails?.gender || "N/A"}</p>
+                <p className="font-medium">{displayValue(resolvedStudent?.gender)}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Adresse</p>
-                <p className="font-medium">{studentDetails?.address || "N/A"}</p>
+                <p className="font-medium">{displayValue(resolvedStudent?.address)}</p>
               </div>
             </div>
 
@@ -129,17 +195,17 @@ export function StudentDetailsModal({
             <div>
               <h3 className="font-semibold mb-3">Informations parent</h3>
               <div className="grid grid-cols-2 gap-4">
-                <div>
+              <div>
                 <p className="text-sm text-muted-foreground">Nom du parent</p>
-                <p className="font-medium">{studentDetails?.parent_name || "N/A"}</p>
+                <p className="font-medium">{displayValue(resolvedStudent?.parent_name)}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Téléphone</p>
-                <p className="font-medium">{studentDetails?.parent_phone || "N/A"}</p>
+                <p className="font-medium">{displayValue(resolvedStudent?.parent_phone)}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Email</p>
-                <p className="font-medium">{studentDetails?.parent_email || "N/A"}</p>
+                <p className="font-medium">{displayValue(resolvedStudent?.parent_email)}</p>
               </div>
             </div>
           </div>
@@ -170,9 +236,9 @@ export function StudentDetailsModal({
                         <TableCell>
                           {payment.payment_date
                             ? new Date(payment.payment_date).toLocaleDateString("fr-FR")
-                            : "N/A"}
+                            : "Non renseigné"}
                         </TableCell>
-                        <TableCell>{payment.payment_type || payment.method || "N/A"}</TableCell>
+                        <TableCell>{payment.payment_type || payment.method || "Non renseigné"}</TableCell>
                         <TableCell>{formatAmount(Number(payment.amount || 0), currency)}</TableCell>
                         <TableCell className="font-medium text-primary">
                           {formatAmount(Number(payment.paid_amount ?? payment.amount ?? 0), currency)}

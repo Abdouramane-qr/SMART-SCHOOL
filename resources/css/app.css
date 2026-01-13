@@ -10,34 +10,51 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
+    --light-app: 210 40% 98%;
+    --light-card: 0 0% 100%;
+    --light-text: 222 47% 11%;
+    --light-muted-text: 214 16% 38%;
+    --light-border: 214 18% 82%;
+
+    --dark-app: 222 47% 11%;
+    --dark-card: 222 35% 16%;
+    --dark-text: 210 40% 98%;
+    --dark-muted-text: 214 16% 70%;
+    --dark-border: 214 20% 26%;
+
+    --bg-app: var(--light-app);
+    --bg-card: var(--light-card);
+    --text-main: var(--light-text);
+    --text-muted: var(--light-muted-text);
+
     --brand-primary: 215 98% 56%;
-    --brand-background: 200 27% 96%;
-    --brand-neutral: 0 0% 70%;
+    --brand-background: var(--light-app);
+    --brand-neutral: 214 18% 72%;
     --brand-white: 0 0% 100%;
 
-    --background: var(--brand-background);
-    --foreground: 222 47% 11%;
+    --background: var(--bg-app);
+    --foreground: var(--text-main);
 
-    --card: var(--brand-white);
-    --card-foreground: 222 47% 11%;
+    --card: var(--bg-card);
+    --card-foreground: var(--text-main);
 
-    --popover: var(--brand-white);
-    --popover-foreground: 222 47% 11%;
+    --popover: var(--bg-card);
+    --popover-foreground: var(--text-main);
 
-    --surface: var(--brand-white);
+    --surface: var(--bg-card);
 
     --primary: var(--brand-primary);
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 215 98% 50%;
+    --primary-hover: 215 98% 52%;
 
     --secondary: var(--brand-background);
-    --secondary-foreground: 222 47% 11%;
+    --secondary-foreground: var(--text-main);
 
     --muted: var(--brand-background);
-    --muted-foreground: 0 0% 35%;
+    --muted-foreground: var(--text-muted);
 
     --accent: var(--brand-background);
-    --accent-foreground: 222 47% 11%;
+    --accent-foreground: var(--text-main);
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
@@ -46,13 +63,13 @@ All colors MUST be HSL.
     --success-foreground: 0 0% 100%;
 
     --warning: var(--brand-neutral);
-    --warning-foreground: 222 47% 11%;
+    --warning-foreground: var(--text-main);
 
     --info: var(--brand-primary);
     --info-foreground: 0 0% 100%;
 
-    --border: var(--brand-neutral);
-    --input: var(--brand-neutral);
+    --border: var(--light-border);
+    --input: var(--light-border);
     --ring: var(--brand-primary);
 
     --radius: 0.75rem;
@@ -60,18 +77,18 @@ All colors MUST be HSL.
     --font-sans: "Source Sans 3", system-ui, sans-serif;
     --font-display: "Source Serif 4", "Source Sans 3", system-ui, sans-serif;
 
-    --sidebar-background: var(--brand-background);
-    --sidebar-foreground: 222 47% 11%;
+    --sidebar-background: var(--bg-app);
+    --sidebar-foreground: var(--text-main);
     --sidebar-primary: var(--brand-primary);
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: var(--brand-background);
-    --sidebar-accent-foreground: 222 47% 11%;
-    --sidebar-border: var(--brand-neutral);
+    --sidebar-accent-foreground: var(--text-main);
+    --sidebar-border: var(--light-border);
     --sidebar-ring: var(--brand-primary);
 
     /* Custom tokens */
-    --gradient-primary: linear-gradient(135deg, hsl(215 98% 56%) 0%, hsl(203 92% 54%) 100%);
-    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(200 27% 96%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(215 98% 56%) 0%, hsl(199 92% 54%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(210 40% 98%) 100%);
     --shadow-sm: 0 1px 2px 0 hsl(222 47% 11% / 0.04);
     --shadow-md: 0 2px 4px -1px hsl(222 47% 11% / 0.08), 0 1px 2px -1px hsl(222 47% 11% / 0.06);
     --shadow-lg: 0 6px 12px -4px hsl(222 47% 11% / 0.12), 0 2px 4px -2px hsl(222 47% 11% / 0.06);
@@ -80,29 +97,34 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
+    --bg-app: var(--dark-app);
+    --bg-card: var(--dark-card);
+    --text-main: var(--dark-text);
+    --text-muted: var(--dark-muted-text);
 
-    --card: 217 33% 17%;
-    --card-foreground: 210 40% 98%;
+    --background: var(--bg-app);
+    --foreground: var(--text-main);
 
-    --popover: 217 33% 17%;
-    --popover-foreground: 210 40% 98%;
+    --card: var(--bg-card);
+    --card-foreground: var(--text-main);
 
-    --surface: 217 33% 17%;
+    --popover: var(--bg-card);
+    --popover-foreground: var(--text-main);
+
+    --surface: var(--bg-card);
 
     --primary: 215 98% 56%;
     --primary-foreground: 0 0% 100%;
     --primary-hover: 215 98% 62%;
 
     --secondary: 215 20% 22%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary-foreground: var(--text-main);
 
-    --muted: 215 25% 27%;
-    --muted-foreground: 0 0% 70%;
+    --muted: 214 20% 26%;
+    --muted-foreground: var(--text-muted);
 
-    --accent: 215 25% 27%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 214 20% 26%;
+    --accent-foreground: var(--text-main);
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
@@ -111,26 +133,26 @@ All colors MUST be HSL.
     --success-foreground: 0 0% 100%;
 
     --warning: var(--brand-neutral);
-    --warning-foreground: 210 40% 98%;
+    --warning-foreground: var(--text-main);
 
     --info: var(--brand-primary);
     --info-foreground: 0 0% 100%;
 
-    --border: 215 25% 27%;
-    --input: 215 25% 27%;
+    --border: var(--dark-border);
+    --input: var(--dark-border);
     --ring: 215 98% 56%;
 
-    --sidebar-background: 222 47% 11%;
-    --sidebar-foreground: 210 40% 98%;
+    --sidebar-background: var(--bg-app);
+    --sidebar-foreground: var(--text-main);
     --sidebar-primary: 215 98% 56%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 25% 27%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 215 25% 27%;
+    --sidebar-accent: 214 20% 26%;
+    --sidebar-accent-foreground: var(--text-main);
+    --sidebar-border: var(--dark-border);
     --sidebar-ring: 215 98% 56%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(215 98% 56%) 0%, hsl(203 92% 54%) 100%);
-    --gradient-card: linear-gradient(180deg, hsl(217 33% 17%) 0%, hsl(217 33% 17%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(215 98% 56%) 0%, hsl(199 92% 54%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(222 35% 16%) 0%, hsl(222 35% 16%) 100%);
     --shadow-blue: 0 4px 10px -4px hsl(215 98% 56% / 0.22);
   }
 }
@@ -141,7 +163,7 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-app text-main;
     font-family: var(--font-sans);
     font-size: 16px;
   }
@@ -149,5 +171,91 @@ All colors MUST be HSL.
   h1, h2, h3, .font-display {
     font-family: var(--font-display);
     letter-spacing: -0.01em;
+  }
+}
+
+@layer components {
+  .ui-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: calc(var(--radius) + 0.25rem);
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--card));
+    color: hsl(var(--card-foreground));
+    box-shadow: var(--shadow-md);
+    transition: var(--transition-smooth);
+  }
+
+  .ui-card:hover {
+    box-shadow: var(--shadow-lg);
+  }
+
+  .ui-card-accent::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+    background: var(--gradient-primary);
+    opacity: 0.85;
+  }
+
+  .ui-card-header {
+    border-bottom: 1px solid hsl(var(--border));
+  }
+
+  .ui-card-footer {
+    border-top: 1px solid hsl(var(--border));
+  }
+  .ui-card[data-density="compact"] .ui-card-header,
+  .ui-card[data-density="compact"] .ui-card-content,
+  .ui-card[data-density="compact"] .ui-card-footer {
+    padding: 1rem;
+  }
+
+  .ui-card[data-density="compact"] .ui-card-header {
+    padding-bottom: 0.75rem;
+  }
+
+  .ui-card[data-density="spacious"] .ui-card-header,
+  .ui-card[data-density="spacious"] .ui-card-content,
+  .ui-card[data-density="spacious"] .ui-card-footer {
+    padding: 2rem;
+  }
+
+  .ui-card[data-variant="premium"] {
+    background: hsl(var(--card));
+    background-image: var(--gradient-card);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .ui-card[data-tone="success"] {
+    border-color: hsl(var(--success) / 0.35);
+    background-image: linear-gradient(135deg, hsl(var(--success) / 0.12) 0%, transparent 60%);
+  }
+
+  .ui-card[data-tone="warning"] {
+    border-color: hsl(var(--warning) / 0.35);
+    background-image: linear-gradient(135deg, hsl(var(--warning) / 0.14) 0%, transparent 60%);
+  }
+
+  .ui-card[data-tone="destructive"] {
+    border-color: hsl(var(--destructive) / 0.35);
+    background-image: linear-gradient(135deg, hsl(var(--destructive) / 0.12) 0%, transparent 60%);
+  }
+
+  .ui-card[data-tone="info"] {
+    border-color: hsl(var(--info) / 0.35);
+    background-image: linear-gradient(135deg, hsl(var(--info) / 0.12) 0%, transparent 60%);
+  }
+
+  .ui-empty-state {
+    border: 1px dashed hsl(var(--border));
+    background-image: var(--gradient-card);
+  }
+
+  .ui-empty-state-icon {
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--background));
+    color: hsl(var(--muted-foreground));
   }
 }

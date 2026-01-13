@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { ThemeToggle } from "./ThemeToggle";
 import { laravelMessagesApi } from "@/services/laravelSchoolApi";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -74,6 +75,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                     className="pl-9 bg-muted/50 border-0 focus-visible:ring-1"
                   />
                 </div>
+                {user?.active_school?.name && (
+                  <Badge variant="secondary" className="shrink-0">
+                    École active: {user.active_school.name}
+                  </Badge>
+                )}
               </div>
 
               {/* Mobile search button */}

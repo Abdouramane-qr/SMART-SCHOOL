@@ -6,39 +6,35 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\EleveResource;
 use App\Models\Classe;
 use App\Models\Eleve;
-use App\Support\CacheKey;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 
 class EleveController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(Eleve::class, 'eleve');
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
-        $schoolId = $request->integer('school_id');
+        $schoolId = $this->resolveSchoolId($request);
         $academicYearId = $request->integer('academic_year_id');
+        $user = $request->user();
+        $teacherClassIds = [];
+        if ($user?->hasRole('enseignant')) {
+            $teacherClassIds = $user->teacherClassIds();
+            if (empty($teacherClassIds)) {
+                $teacherClassIds = [0];
+            }
+        }
         $perPage = $request->integer('per_page') ?: 15;
         $page = $request->integer('page') ?: 1;
 
         $parentEmail = trim((string) $request->string('parent_email'));
-        $keyParts = [
-            $perPage,
-            $page,
-            $request->integer('user_id'),
-            $request->integer('class_id'),
-            $request->string('q'),
-        ];
-        if ($parentEmail !== '') {
-            $keyParts[] = $parentEmail;
-        }
-        $key = CacheKey::key('eleves:index', $schoolId, $academicYearId, $keyParts);
-        $tags = CacheKey::tags($schoolId, $academicYearId);
-
-        $cache = $tags ? Cache::tags($tags) : Cache::store();
-        $result = $cache->remember($key, now()->addMinutes(5), function () use ($request, $perPage, $parentEmail) {
+        $resolver = function () use ($request, $perPage, $parentEmail, $teacherClassIds, $schoolId) {
             $query = Eleve::query()
                 ->select([
                     'eleves.id',
@@ -76,8 +72,8 @@ class EleveController extends Controller
                 ->orderBy('last_name')
                 ->orderBy('first_name');
 
-            if ($request->filled('school_id')) {
-                $query->where('school_id', $request->integer('school_id'));
+            if ($schoolId) {
+                $query->where('school_id', $schoolId);
             }
 
             if ($request->filled('academic_year_id')) {
@@ -92,6 +88,10 @@ class EleveController extends Controller
 
             if ($request->filled('class_id')) {
                 $query->where('classe_id', $request->integer('class_id'));
+            }
+
+            if (! empty($teacherClassIds)) {
+                $query->whereIn('classe_id', $teacherClassIds);
             }
 
             if ($parentEmail !== '') {
@@ -109,9 +109,9 @@ class EleveController extends Controller
             }
 
             return $query->paginate($perPage);
-        });
+        };
 
-        return EleveResource::collection($result);
+        return EleveResource::collection($resolver());
     }
 
     /**
@@ -140,6 +140,9 @@ class EleveController extends Controller
             'parent_email.email' => "L'email du parent est invalide.",
         ]);
 
+        $schoolId = $this->resolveSchoolId($request);
+        $validated['school_id'] = $schoolId;
+
         if (empty($validated['school_id'])) {
             $classe = Classe::find($validated['classe_id']);
             $validated['school_id'] = $classe?->school_id;
@@ -154,8 +157,6 @@ class EleveController extends Controller
         }
 
         $eleve = Eleve::create($validated);
-        Cache::tags(CacheKey::tags($eleve->school_id, $eleve->classe?->academic_year_id))->flush();
-
         return new EleveResource($eleve->load(['classe', 'paiements', 'school']));
     }
 
@@ -164,17 +165,18 @@ class EleveController extends Controller
      */
     public function show(Eleve $eleve)
     {
-        $schoolId = $eleve->school_id;
-        $academicYearId = $eleve->classe?->academic_year_id;
-        $key = CacheKey::key('eleves:show', $schoolId, $academicYearId, [$eleve->id]);
-        $tags = CacheKey::tags($schoolId, $academicYearId);
+        $user = request()->user();
+        if ($user?->hasRole('enseignant')) {
+            $classId = $eleve->classe_id;
+            if ($classId && ! in_array($classId, $user->teacherClassIds(), true)) {
+                return response()->json(['message' => 'Accès refusé à cet élève.'], 403);
+            }
+        }
 
-        $cache = $tags ? Cache::tags($tags) : Cache::store();
-        $resource = $cache->remember($key, now()->addMinutes(5), function () use ($eleve) {
+        $resolver = function () use ($eleve) {
             return $eleve->load(['classe', 'paiements', 'school']);
-        });
-
-        return new EleveResource($resource);
+        };
+        return new EleveResource($resolver());
     }
 
     /**
@@ -201,6 +203,17 @@ class EleveController extends Controller
             'parent_email.email' => "L'email du parent est invalide.",
         ]);
 
+        $schoolId = $this->resolveSchoolId($request);
+        $validated['school_id'] = $schoolId;
+
+        $user = $request->user();
+        if ($user?->hasRole('enseignant')) {
+            $classId = $validated['classe_id'] ?? $eleve->classe_id;
+            if ($classId && ! in_array($classId, $user->teacherClassIds(), true)) {
+                return response()->json(['message' => 'Accès refusé à cet élève.'], 403);
+            }
+        }
+
         if (array_key_exists('classe_id', $validated) && empty($validated['school_id'])) {
             $classe = Classe::find($validated['classe_id']);
             $validated['school_id'] = $classe?->school_id;
@@ -215,8 +228,6 @@ class EleveController extends Controller
         }
 
         $eleve->update($validated);
-        Cache::tags(CacheKey::tags($eleve->school_id, $eleve->classe?->academic_year_id))->flush();
-
         return new EleveResource($eleve->load(['classe', 'paiements', 'school']));
     }
 
@@ -225,11 +236,17 @@ class EleveController extends Controller
      */
     public function destroy(Eleve $eleve)
     {
+        $user = request()->user();
+        if ($user?->hasRole('enseignant')) {
+            $classId = $eleve->classe_id;
+            if ($classId && ! in_array($classId, $user->teacherClassIds(), true)) {
+                return response()->json(['message' => 'Accès refusé à cet élève.'], 403);
+            }
+        }
+
         $schoolId = $eleve->school_id;
         $academicYearId = $eleve->classe?->academic_year_id;
         $eleve->delete();
-
-        Cache::tags(CacheKey::tags($schoolId, $academicYearId))->flush();
 
         return response()->noContent();
     }

@@ -146,9 +146,9 @@ export default function Dashboard() {
       const unpaidCount = (paymentsData || []).filter(p => p.status === "en_retard").length;
 
       setPaymentDistribution([
-        { name: "Payé", value: paidCount, color: "hsl(142, 76%, 36%)" },
-        { name: "Partiel", value: partialCount, color: "hsl(38, 92%, 50%)" },
-        { name: "Non payé", value: unpaidCount, color: "hsl(0, 84%, 60%)" },
+        { name: "Payé", value: paidCount, color: "hsl(var(--success))" },
+        { name: "Partiel", value: partialCount, color: "hsl(var(--warning))" },
+        { name: "Non payé", value: unpaidCount, color: "hsl(var(--destructive))" },
       ]);
 
       // Recent activities
@@ -361,30 +361,34 @@ export default function Dashboard() {
           value={totalStudents.toString()}
           icon={Users}
           subtitle={`${financeStats.studentsUpToDate} à jour`}
+          variant="premium"
         />
         <StatsCard
           title="Total Encaissé"
           value={formatAmount(financeStats.totalPaid)}
           icon={DollarSign}
           trend={{ value: `sur ${formatAmount(financeStats.totalExpected)}`, positive: true }}
+          variant="premium"
         />
         <StatsCard
           title="Dépenses Totales"
           value={formatAmount(financeStats.totalExpenses + financeStats.totalSalaries)}
           icon={TrendingDown}
           subtitle={`Salaires: ${formatAmount(financeStats.totalSalaries)}`}
+          variant="premium"
         />
         <StatsCard
           title="Résultat Net"
           value={formatAmount(financeStats.netResult)}
           icon={Calculator}
           trend={{ value: financeStats.netResult >= 0 ? "Positif" : "Négatif", positive: financeStats.netResult >= 0 }}
+          variant="premium"
         />
       </div>
 
       {/* Quick Actions */}
       <Card>
-        <CardHeader className="border-b">
+        <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Wallet className="h-5 w-5 text-primary" />
             Actions rapides
@@ -436,7 +440,7 @@ export default function Dashboard() {
 
       {/* Secondary Stats */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card className="shadow-md">
+        <Card tone="success">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
               <div className={`h-10 w-10 rounded-full flex items-center justify-center ${getStatusSoftClass("success")}`}>
@@ -449,7 +453,7 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
-        <Card className="shadow-md">
+        <Card tone="destructive">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-full bg-brand-neutral/10 flex items-center justify-center">
@@ -462,7 +466,7 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
-        <Card className="shadow-md">
+        <Card tone="warning">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
               <div className={`h-10 w-10 rounded-full flex items-center justify-center ${getStatusSoftClass("warning")}`}>
@@ -477,7 +481,7 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
-        <Card className="shadow-md">
+        <Card tone="info">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
               <div className={`h-10 w-10 rounded-full flex items-center justify-center ${getStatusSoftClass("info")}`}>
@@ -495,7 +499,7 @@ export default function Dashboard() {
       {/* Charts */}
       <div className="grid gap-4 md:grid-cols-2">
         {/* Bar Chart - Monthly Revenue vs Expenses */}
-        <Card className="shadow-md">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <CreditCard className="h-5 w-5 text-primary" />
@@ -517,14 +521,14 @@ export default function Dashboard() {
                   formatter={(value: number) => [formatAmount(value)]}
                 />
                 <Bar dataKey="revenus" name="Revenus" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="depenses" name="Dépenses" fill="hsl(0, 84%, 60%)" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="depenses" name="Dépenses" fill="hsl(var(--warning))" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
         {/* Donut Chart - Payment Distribution */}
-        <Card className="shadow-md">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calculator className="h-5 w-5 text-primary" />
@@ -563,7 +567,7 @@ export default function Dashboard() {
       </div>
 
       {/* Revenue Trend */}
-      <Card className="shadow-md">
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-primary" />
@@ -599,7 +603,7 @@ export default function Dashboard() {
       </Card>
 
       {/* Recent Activity */}
-      <Card className="shadow-md">
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-primary" />
@@ -627,7 +631,12 @@ export default function Dashboard() {
               {recentActivities.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                    Aucune activité récente
+                    <div className="mx-auto flex flex-col items-center gap-3 ui-empty-state rounded-xl p-6">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full ui-empty-state-icon">
+                        <FileText className="h-6 w-6" />
+                      </div>
+                      <span>Aucune activité récente</span>
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : (

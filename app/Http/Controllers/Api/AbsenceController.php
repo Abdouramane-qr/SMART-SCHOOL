@@ -12,12 +12,25 @@ use Illuminate\Support\Facades\Cache;
 
 class AbsenceController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(Absence::class, 'absence');
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
-        $schoolId = $request->integer('school_id') ?: $request->user()?->school_id;
+        $schoolId = $this->resolveSchoolId($request);
+        $user = $request->user();
+        $teacherClassIds = [];
+        if ($user?->hasRole('enseignant')) {
+            $teacherClassIds = $user->teacherClassIds();
+            if (empty($teacherClassIds)) {
+                $teacherClassIds = [0];
+            }
+        }
         $academicYearId = $request->integer('academic_year_id');
         if (empty($academicYearId) && ! empty($schoolId)) {
             $academicYearId = AcademicYear::query()
@@ -39,7 +52,7 @@ class AbsenceController extends Controller
         $tags = CacheKey::tags($schoolId, $academicYearId);
         $cache = $tags ? Cache::tags($tags) : Cache::store();
 
-        $result = $cache->remember($key, now()->addMinutes(5), function () use ($request, $perPage, $studentIds) {
+        $result = $cache->remember($key, now()->addMinutes(5), function () use ($request, $perPage, $studentIds, $teacherClassIds, $schoolId, $academicYearId) {
             $query = Absence::query()
                 ->select([
                     'id',
@@ -87,6 +100,16 @@ class AbsenceController extends Controller
                 $query->where('classe_id', $request->integer('class_id'));
             }
 
+            if (! empty($teacherClassIds)) {
+                $query->where(function ($builder) use ($teacherClassIds) {
+                    $builder
+                        ->whereIn('classe_id', $teacherClassIds)
+                        ->orWhereHas('eleve', function ($studentBuilder) use ($teacherClassIds) {
+                            $studentBuilder->whereIn('classe_id', $teacherClassIds);
+                        });
+                });
+            }
+
             return $query->paginate($perPage);
         });
 
@@ -115,6 +138,21 @@ class AbsenceController extends Controller
             'duration_minutes.min' => 'La duree doit etre positive.',
         ]);
 
+        $schoolId = $this->resolveSchoolId($request);
+        $validated['school_id'] = $schoolId;
+
+        $user = $request->user();
+        if ($user?->hasRole('enseignant')) {
+            $classId = $validated['class_id'] ?? null;
+            if (! $classId) {
+                $eleve = \App\Models\Eleve::query()->find($validated['eleve_id']);
+                $classId = $eleve?->classe_id;
+            }
+            if ($classId && ! in_array($classId, $user->teacherClassIds(), true)) {
+                return response()->json(['message' => 'Accès refusé à cette classe.'], 403);
+            }
+        }
+
         $payload = $validated;
         $payload['classe_id'] = $validated['class_id'] ?? null;
         $payload['academic_year_id'] = $validated['school_year_id'] ?? null;
@@ -141,6 +179,14 @@ class AbsenceController extends Controller
      */
     public function show(Absence $absence)
     {
+        $user = request()->user();
+        if ($user?->hasRole('enseignant')) {
+            $classId = $absence->classe_id ?? $absence->eleve?->classe_id;
+            if ($classId && ! in_array($classId, $user->teacherClassIds(), true)) {
+                return response()->json(['message' => 'Accès refusé à cette absence.'], 403);
+            }
+        }
+
         $schoolId = $absence->school_id;
         $academicYearId = $absence->eleve?->classe?->academic_year_id;
         $key = CacheKey::key('absences:show', $schoolId, $academicYearId, [$absence->id]);
@@ -177,6 +223,17 @@ class AbsenceController extends Controller
             'duration_minutes.min' => 'La duree doit etre positive.',
         ]);
 
+        $schoolId = $this->resolveSchoolId($request);
+        $validated['school_id'] = $schoolId;
+
+        $user = $request->user();
+        if ($user?->hasRole('enseignant')) {
+            $classId = $validated['class_id'] ?? $absence->classe_id ?? $absence->eleve?->classe_id;
+            if ($classId && ! in_array($classId, $user->teacherClassIds(), true)) {
+                return response()->json(['message' => 'Accès refusé à cette absence.'], 403);
+            }
+        }
+
         if (array_key_exists('class_id', $validated)) {
             $validated['classe_id'] = $validated['class_id'];
             unset($validated['class_id']);
@@ -207,6 +264,14 @@ class AbsenceController extends Controller
      */
     public function destroy(Absence $absence)
     {
+        $user = request()->user();
+        if ($user?->hasRole('enseignant')) {
+            $classId = $absence->classe_id ?? $absence->eleve?->classe_id;
+            if ($classId && ! in_array($classId, $user->teacherClassIds(), true)) {
+                return response()->json(['message' => 'Accès refusé à cette absence.'], 403);
+            }
+        }
+
         $schoolId = $absence->school_id;
         $academicYearId = $absence->eleve?->classe?->academic_year_id;
         $absence->delete();

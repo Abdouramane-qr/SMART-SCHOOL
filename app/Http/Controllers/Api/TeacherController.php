@@ -12,18 +12,23 @@ use Illuminate\Support\Facades\Cache;
 
 class TeacherController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(Enseignant::class, 'teacher');
+    }
+
     public function index(Request $request)
     {
-        $schoolId = $request->integer('school_id');
+        $schoolId = $this->resolveSchoolId($request);
         $userId = $request->integer('user_id');
         $key = CacheKey::key('teachers:index', $schoolId, null, [$userId ?: null]);
         $tags = CacheKey::tags($schoolId, null);
         $cache = $tags ? Cache::tags($tags) : Cache::store();
 
-        $result = $cache->remember($key, now()->addMinutes(5), function () use ($request, $userId) {
+        $result = $cache->remember($key, now()->addMinutes(5), function () use ($userId, $schoolId) {
             $query = Enseignant::query()->with('user')->orderByDesc('created_at');
-            if ($request->filled('school_id')) {
-                $query->where('school_id', $request->integer('school_id'));
+            if ($schoolId) {
+                $query->where('school_id', $schoolId);
             }
             if ($userId) {
                 $query->where('user_id', $userId);
@@ -47,6 +52,9 @@ class TeacherController extends Controller
             'hire_date' => ['nullable', 'date'],
             'monthly_salary' => ['nullable', 'numeric', 'min:0'],
         ]);
+
+        $schoolId = $this->resolveSchoolId($request);
+        $validated['school_id'] = $schoolId;
 
         $teacher = Enseignant::create($validated);
         TeacherAudit::create([
@@ -78,6 +86,9 @@ class TeacherController extends Controller
             'hire_date' => ['sometimes', 'nullable', 'date'],
             'monthly_salary' => ['sometimes', 'nullable', 'numeric', 'min:0'],
         ]);
+
+        $schoolId = $this->resolveSchoolId($request);
+        $validated['school_id'] = $schoolId;
 
         $oldData = $teacher->toArray();
         $teacher->update($validated);

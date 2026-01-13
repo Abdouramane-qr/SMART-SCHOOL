@@ -10,7 +10,8 @@ class FinanceSettingController extends Controller
 {
     public function index(Request $request)
     {
-        $schoolId = $request->integer('school_id');
+        $this->authorize('viewAny', FinanceSetting::class);
+        $schoolId = $this->resolveSchoolId($request);
 
         $query = FinanceSetting::query();
         if ($schoolId) {

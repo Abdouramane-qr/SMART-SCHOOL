@@ -28,6 +28,9 @@ class SalaryResource extends JsonResource
             'deductions' => $this->deductions,
             'net_amount' => $this->net_amount,
             'notes' => $this->notes,
+            'status' => $this->status,
+            'approved_at' => $this->approved_at,
+            'approved_by' => $this->approved_by,
             'teachers' => $teacher ? [
                 'id' => $teacher->id,
                 'profiles' => [

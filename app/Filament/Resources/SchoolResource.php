@@ -12,6 +12,7 @@ use Filament\Tables\Table;
 use Filament\Tables;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Notifications\Notification;
 
 class SchoolResource extends Resource
 {
@@ -63,6 +64,18 @@ class SchoolResource extends Resource
                 //
             ])
             ->actions([
+                Tables\Actions\Action::make('setActive')
+                    ->label('Définir active')
+                    ->icon('heroicon-o-check-circle')
+                    ->visible(fn (School $record): bool => ! $record->is_active)
+                    ->requiresConfirmation()
+                    ->action(function (School $record): void {
+                        $record->update(['is_active' => true]);
+                        Notification::make()
+                            ->title("École active mise à jour")
+                            ->success()
+                            ->send();
+                    }),
                 Tables\Actions\EditAction::make()
                     ->tooltip('Modifier'),
             ])

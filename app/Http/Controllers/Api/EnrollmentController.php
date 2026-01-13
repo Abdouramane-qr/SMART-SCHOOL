@@ -11,10 +11,23 @@ use Illuminate\Support\Facades\Cache;
 
 class EnrollmentController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(Enrollment::class, 'enrollment');
+    }
+
     public function index(Request $request)
     {
-        $schoolId = $request->integer('school_id');
+        $schoolId = $this->resolveSchoolId($request);
         $academicYearId = $request->integer('school_year_id') ?: $request->integer('academic_year_id');
+        $user = $request->user();
+        $teacherClassIds = [];
+        if ($user?->hasRole('enseignant')) {
+            $teacherClassIds = $user->teacherClassIds();
+            if (empty($teacherClassIds)) {
+                $teacherClassIds = [0];
+            }
+        }
         $perPage = $request->integer('per_page');
         $page = $request->integer('page') ?: 1;
 
@@ -23,7 +36,7 @@ class EnrollmentController extends Controller
         $tags = CacheKey::tags($schoolId, $academicYearId);
         $cache = $tags ? Cache::tags($tags) : Cache::store();
 
-        $result = $cache->remember($key, now()->addMinutes(5), function () use ($request, $perPage, $academicYearId) {
+        $result = $cache->remember($key, now()->addMinutes(5), function () use ($request, $perPage, $academicYearId, $teacherClassIds, $schoolId) {
             $query = Enrollment::query()
                 ->with(['eleve', 'classe'])
                 ->orderByDesc('created_at');
@@ -40,6 +53,16 @@ class EnrollmentController extends Controller
                 $query->where('academic_year_id', $academicYearId);
             }
 
+            if ($schoolId) {
+                $query->whereHas('classe', function ($builder) use ($schoolId) {
+                    $builder->where('school_id', $schoolId);
+                });
+            }
+
+            if (! empty($teacherClassIds)) {
+                $query->whereIn('classe_id', $teacherClassIds);
+            }
+
             return $perPage ? $query->paginate($perPage) : $query->get();
         });
 
@@ -54,6 +77,12 @@ class EnrollmentController extends Controller
             'school_year_id' => ['required', 'integer', 'exists:academic_years,id'],
             'enrollment_date' => ['nullable', 'date'],
         ]);
+
+        $schoolId = $this->resolveSchoolId($request);
+        $classe = \App\Models\Classe::query()->find($validated['class_id']);
+        if ($classe && $classe->school_id !== $schoolId) {
+            return response()->json(['message' => 'Accès refusé à cette classe.'], 403);
+        }
 
         $enrollment = Enrollment::create([
             'eleve_id' => $validated['student_id'],

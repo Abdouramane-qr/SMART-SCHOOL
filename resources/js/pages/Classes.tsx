@@ -22,6 +22,8 @@ import { DeleteClassDialog } from "@/components/classes/DeleteClassDialog";
 import { ClassEnrollmentsDialog } from "@/components/classes/ClassEnrollmentsDialog";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { ImportExportActions } from "@/components/ImportExportActions";
+import { RoleGuard } from "@/components/RoleGuard";
 import type { LaravelClasse } from "@/services/laravelSchoolApi";
 
 export default function Classes() {
@@ -66,7 +68,14 @@ export default function Classes() {
         title="Gestion des classes"
         description={`${totalClasses} classes actives`}
         icon={GraduationCap}
-        actions={<AddClassDialog onSuccess={refetch} />}
+        actions={
+          <div className="flex gap-2">
+            <RoleGuard allowedRoles={["admin"]}>
+              <ImportExportActions entity="classes" onImported={refetch} />
+            </RoleGuard>
+            <AddClassDialog onSuccess={refetch} />
+          </div>
+        }
       />
 
       {/* Statistics */}
@@ -76,30 +85,34 @@ export default function Classes() {
           value={totalClasses.toString()}
           icon={BookOpen}
           trend={{ value: "0%", positive: true }}
+          density="compact"
         />
         <StatsCard
           title="Élèves inscrits"
           value={totalStudents.toString()}
           icon={Users}
           trend={{ value: "0%", positive: true }}
+          density="compact"
         />
         <StatsCard
           title="Capacité totale"
           value={totalCapacity.toString()}
           icon={GraduationCap}
           trend={{ value: "0%", positive: true }}
+          density="compact"
         />
         <StatsCard
           title="Taux d'occupation"
           value={`${occupancyRate}%`}
           icon={Users}
           trend={{ value: "0%", positive: parseFloat(occupancyRate.toString()) < 90 }}
+          density="compact"
         />
       </div>
 
       {/* Search */}
-      <Card>
-        <CardContent className="pt-6">
+      <Card density="compact">
+        <CardContent>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -120,9 +133,11 @@ export default function Classes() {
           ))}
         </div>
       ) : filteredClasses.length === 0 ? (
-        <Card>
+        <Card className="ui-empty-state" density="spacious">
           <CardContent className="py-12 text-center">
-            <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full ui-empty-state-icon">
+              <BookOpen className="h-6 w-6" />
+            </div>
             <p className="text-muted-foreground">Aucune classe trouvée</p>
             <div className="mt-4 inline-flex">
               <AddClassDialog onSuccess={refetch} />
@@ -132,10 +147,7 @@ export default function Classes() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredClasses.map((classItem) => (
-            <Card
-              key={classItem.id}
-              className="shadow-sm"
-            >
+            <Card key={classItem.id} density="compact">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div>

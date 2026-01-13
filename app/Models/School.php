@@ -13,6 +13,27 @@ class School extends Model
         'is_active',
     ];
 
+    protected static function booted(): void
+    {
+        static::saving(function (School $school): void {
+            if ($school->is_active) {
+                School::query()
+                    ->where('id', '!=', $school->id)
+                    ->update(['is_active' => false]);
+                return;
+            }
+
+            $otherActive = School::query()
+                ->where('id', '!=', $school->id)
+                ->where('is_active', true)
+                ->exists();
+
+            if (! $otherActive) {
+                $school->is_active = true;
+            }
+        });
+    }
+
     public function academicYears(): HasMany
     {
         return $this->hasMany(AcademicYear::class);

@@ -265,15 +265,17 @@ class FinanceService
         }
 
         $payments = $paymentsQuery->get(['amount', 'paid_amount', 'status', 'payment_date', 'eleve_id']);
-        $expenses = $expensesQuery->get(['amount', 'expense_date']);
-        $salaries = $salariesQuery->get(['net_amount', 'payment_date']);
+        $expenses = $expensesQuery
+            ->whereIn('status', ['approved', 'paid'])
+            ->get(['amount', 'expense_date']);
+        $salaries = $salariesQuery
+            ->whereIn('status', ['approved', 'paid'])
+            ->get(['net_amount', 'payment_date']);
 
-        $totalExpected = $payments->sum(fn ($p) => (float) ($p->amount ?? 0));
-        $totalPaid = $payments->sum(fn ($p) => (float) ($p->paid_amount ?? $p->amount ?? 0));
-        $totalRemaining = $totalExpected - $totalPaid;
+        $totalExpectedAll = $payments->sum(fn ($p) => (float) ($p->amount ?? 0));
+        $totalPaidAll = $payments->sum(fn ($p) => (float) ($p->paid_amount ?? $p->amount ?? 0));
         $totalExpenses = $expenses->sum(fn ($e) => (float) ($e->amount ?? 0));
         $totalSalaries = $salaries->sum(fn ($s) => (float) ($s->net_amount ?? 0));
-        $netResult = $totalPaid - $totalExpenses - $totalSalaries;
 
         $studentPayments = [];
         foreach ($payments as $payment) {
@@ -287,13 +289,29 @@ class FinanceService
 
         $studentsUpToDate = 0;
         $studentsNotUpToDate = 0;
+        $expectedOutstanding = 0.0;
+        $paidOutstanding = 0.0;
         foreach ($studentPayments as $stats) {
             if ($stats['paid'] >= $stats['total']) {
                 $studentsUpToDate++;
             } else {
                 $studentsNotUpToDate++;
+                $expectedOutstanding += $stats['total'];
+                $paidOutstanding += $stats['paid'];
             }
         }
+
+        // Prefer outstanding totals when there are unpaid students; otherwise fall back to all payments.
+        if ($studentsNotUpToDate > 0) {
+            $totalExpected = $expectedOutstanding;
+            $totalPaid = $paidOutstanding;
+        } else {
+            $totalExpected = $totalExpectedAll;
+            $totalPaid = $totalPaidAll;
+        }
+
+        $totalRemaining = $totalExpected - $totalPaid;
+        $netResult = $totalPaid - $totalExpenses - $totalSalaries;
 
         $months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
         $monthlyRevenue = array_fill(0, 12, 0.0);

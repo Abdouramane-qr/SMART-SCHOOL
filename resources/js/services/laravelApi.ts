@@ -1,4 +1,4 @@
-const API_BASE_URL =
+export const API_BASE_URL =
   import.meta.env.VITE_LARAVEL_API_BASE_URL || "http://localhost:8000/api";
 
 const apiOrigin = (() => {
@@ -33,6 +33,13 @@ const parseJson = async (response: Response) => {
   } catch {
     return null;
   }
+};
+
+export type ApiError = Error & {
+  status?: number;
+  code?: string;
+  details?: Record<string, string[]>;
+  payload?: unknown;
 };
 
 export const apiRequest = async <T>(
@@ -70,11 +77,19 @@ export const apiRequest = async <T>(
 
   if (!response.ok) {
     const message =
-      payload?.message || payload?.error || "Erreur lors de la requete";
-    const error = new Error(message) as Error & { details?: Record<string, string[]> };
+      payload?.error?.message ||
+      payload?.message ||
+      payload?.error ||
+      "Erreur lors de la requete";
+    const error = new Error(message) as ApiError;
+    error.status = response.status;
+    if (payload?.error?.code || payload?.code) {
+      error.code = payload?.error?.code || payload?.code;
+    }
     if (payload?.errors && typeof payload.errors === "object") {
       error.details = payload.errors as Record<string, string[]>;
     }
+    error.payload = payload;
     throw error;
   }
 

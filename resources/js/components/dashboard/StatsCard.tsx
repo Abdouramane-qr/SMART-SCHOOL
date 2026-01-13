@@ -10,13 +10,22 @@ interface StatsCardProps {
     positive: boolean;
   };
   subtitle?: string;
+  density?: "default" | "compact" | "spacious";
+  variant?: "default" | "accent" | "premium";
 }
 
-export function StatsCard({ title, value, icon: Icon, trend, subtitle }: StatsCardProps) {
+export function StatsCard({
+  title,
+  value,
+  icon: Icon,
+  trend,
+  subtitle,
+  density = "default",
+  variant = "accent",
+}: StatsCardProps) {
   return (
-    <Card className="overflow-hidden shadow-sm">
-      <div className="h-1 w-full bg-primary/50" />
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
+    <Card density={density} variant={variant}>
+      <CardHeader className="flex flex-row items-center justify-between border-b-0 pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">
           {title}
         </CardTitle>

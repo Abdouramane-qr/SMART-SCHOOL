@@ -65,6 +65,8 @@ Vue fonctionnelle complete: `PLATFORM_FEATURES.md`.
 - Coherence Filament/React: `AUDIT_COHERENCE.md`
 - Admin reduction: `AUDIT_ADMIN_REDUCTION.md`
 - Roles/permissions: `AUDIT_ROLES_PERMISSIONS.md`
+- Mono-school mode & interface élèves: `docs/AUDIT_MONO_SCHOOL.md`
+- Problèmes/tests en cours: `docs/AUDIT_ISSUES.md`
 
 ## Audit Checkpoints
 - 2026-01-06: buttons/couleurs/typo/branding cohérents React + Filament; aucune couleur hors palette détectée.

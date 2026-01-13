@@ -216,29 +216,33 @@ export default function Finances() {
           value={formatDisplayAmount(financeStats.totalPaid)}
           icon={DollarSign}
           trend={{ value: `sur ${formatDisplayAmount(financeStats.totalExpected)}`, positive: true }}
+          variant="premium"
         />
         <StatsCard
           title="Reste à payer"
           value={formatDisplayAmount(financeStats.totalRemaining)}
           icon={Wallet}
           subtitle={`${financeStats.studentsNotUpToDate} élève(s) en retard`}
+          variant="premium"
         />
         <StatsCard
           title="Dépenses"
           value={formatDisplayAmount(financeStats.totalExpenses)}
           icon={TrendingDown}
+          variant="premium"
         />
         <StatsCard
           title="Résultat Net"
           value={formatDisplayAmount(financeStats.netResult)}
           icon={Calculator}
           trend={{ value: financeStats.netResult >= 0 ? "Positif" : "Négatif", positive: financeStats.netResult >= 0 }}
+          variant="premium"
         />
       </div>
 
       {/* Charts */}
       <div className="grid gap-4 md:grid-cols-2">
-        <Card className="shadow-md">
+        <Card>
           <CardHeader>
             <CardTitle>Évolution mensuelle</CardTitle>
           </CardHeader>
@@ -263,7 +267,7 @@ export default function Finances() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-md">
+        <Card>
           <CardHeader>
             <CardTitle>Tendance des revenus</CardTitle>
           </CardHeader>
@@ -296,7 +300,7 @@ export default function Finances() {
       </div>
 
       {/* Payment Tracking Table */}
-      <Card className="shadow-md">
+      <Card>
         <CardHeader>
           <CardTitle>Suivi des paiements</CardTitle>
         </CardHeader>
@@ -320,7 +324,12 @@ export default function Finances() {
               {payments.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={canEdit ? 10 : 9} className="text-center text-muted-foreground">
-                    Aucun paiement enregistré
+                    <div className="mx-auto flex flex-col items-center gap-3 ui-empty-state rounded-xl p-6">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full ui-empty-state-icon">
+                        <FileText className="h-6 w-6" />
+                      </div>
+                      <span>Aucun paiement enregistré</span>
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : (
@@ -384,7 +393,7 @@ export default function Finances() {
       </Card>
 
       {/* Recent Expenses */}
-      <Card className="shadow-md">
+      <Card>
         <CardHeader>
           <CardTitle>Dépenses récentes</CardTitle>
         </CardHeader>
@@ -405,7 +414,12 @@ export default function Finances() {
               {expenses.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center text-muted-foreground">
-                    Aucune dépense enregistrée
+                    <div className="mx-auto flex flex-col items-center gap-3 ui-empty-state rounded-xl p-6">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full ui-empty-state-icon">
+                        <TrendingDown className="h-6 w-6" />
+                      </div>
+                      <span>Aucune dépense enregistrée</span>
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : (

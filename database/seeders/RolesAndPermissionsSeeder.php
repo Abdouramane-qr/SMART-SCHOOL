@@ -126,5 +126,11 @@ class RolesAndPermissionsSeeder extends Seeder
         if (! $user->hasRole('super_admin')) {
             $user->assignRole('super_admin');
         }
+
+        if (! $user->isApproved()) {
+            $user->approved_at = now();
+            $user->approved_by = $user->id;
+            $user->save();
+        }
     }
 }

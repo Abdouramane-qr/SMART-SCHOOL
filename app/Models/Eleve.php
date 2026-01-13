@@ -30,6 +30,10 @@ class Eleve extends Model
         'parent_email',
     ];
 
+    protected $casts = [
+        'birth_date' => 'date:Y-m-d',
+    ];
+
     public function school(): BelongsTo
     {
         return $this->belongsTo(School::class);
@@ -119,10 +123,24 @@ class Eleve extends Model
                 $academicYearId = Classe::find($eleve->classe_id)?->academic_year_id;
             }
 
-            $tags = CacheKey::tags($schoolId, $academicYearId);
-            if ($tags) {
-                Cache::tags($tags)->flush();
-            }
+            $touchVersion = function (?int $schoolId, ?int $academicYearId): void {
+                $key = CacheKey::key('eleves:version', $schoolId, $academicYearId);
+                $current = Cache::get($key, 1);
+                Cache::forever($key, $current + 1);
+            };
+
+            $flushTags = function (array $tags): void {
+                if ($tags) {
+                    Cache::tags($tags)->flush();
+                }
+            };
+
+            $touchVersion($schoolId, null);
+            $touchVersion($schoolId, $academicYearId);
+            $touchVersion(null, null);
+            $touchVersion(null, $academicYearId);
+            $flushTags(CacheKey::tags($schoolId, null));
+            $flushTags(CacheKey::tags($schoolId, $academicYearId));
         };
 
         static::saved($flushCache);

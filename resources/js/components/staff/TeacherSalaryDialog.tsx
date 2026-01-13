@@ -111,6 +111,18 @@ export function TeacherSalaryDialog({ open, onOpenChange, teacher }: TeacherSala
     "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
   ];
 
+  const getStatusBadge = (status?: string | null) => {
+    const normalized = status || "draft";
+    const map: Record<string, { label: string; variant: "default" | "secondary" | "outline" }> = {
+      draft: { label: "Brouillon", variant: "outline" },
+      submitted: { label: "Soumis", variant: "secondary" },
+      approved: { label: "Validé", variant: "default" },
+      paid: { label: "Payé", variant: "default" },
+    };
+    const config = map[normalized] || { label: normalized, variant: "outline" };
+    return <Badge variant={config.variant}>{config.label}</Badge>;
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -221,12 +233,13 @@ export function TeacherSalaryDialog({ open, onOpenChange, teacher }: TeacherSala
                 <TableHead>Retenues</TableHead>
                 <TableHead>Net</TableHead>
                 <TableHead>Date paiement</TableHead>
+                <TableHead>Statut</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {salaries.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center text-muted-foreground">
                     Aucun salaire enregistré
                   </TableCell>
                 </TableRow>
@@ -249,6 +262,7 @@ export function TeacherSalaryDialog({ open, onOpenChange, teacher }: TeacherSala
                     <TableCell>
                       {new Date(salary.payment_date).toLocaleDateString("fr-FR")}
                     </TableCell>
+                    <TableCell>{getStatusBadge(salary.status)}</TableCell>
                   </TableRow>
                 ))
               )}

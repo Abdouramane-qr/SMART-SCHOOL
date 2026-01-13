@@ -30,10 +30,16 @@ export default defineConfig(({ mode }) => {
     const devServerUrl = resolveDevServerUrl(env);
     const appUrl = resolveAppUrl(env);
 
+    const input = [
+        'resources/js/main.tsx',
+        'resources/css/app.css',
+        'resources/css/filament/admin/theme.css',
+    ];
+
     return {
         plugins: [
             laravel({
-                input: 'resources/js/main.tsx',
+                input,
                 refresh: true,
             }),
             react(),
@@ -41,6 +47,11 @@ export default defineConfig(({ mode }) => {
         resolve: {
             alias: {
                 '@': resolve(__dirname, 'resources/js'),
+            },
+        },
+        build: {
+            rollupOptions: {
+                input,
             },
         },
         server: {

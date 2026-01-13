@@ -1,4 +1,4 @@
-import { apiRequest, unwrapData } from "@/services/laravelApi";
+import { apiRequest, unwrapData, API_BASE_URL } from "@/services/laravelApi";
 
 export interface LaravelPaginationMeta {
   current_page?: number;
@@ -54,6 +54,30 @@ const fetchAllPages = async <T>(
   } while (page <= lastPage);
 
   return items;
+};
+
+const unwrapNestedResource = <T>(value: T | { data: T } | null | undefined) => {
+  if (value && typeof value === "object" && "data" in value) {
+    return (value as { data: T }).data;
+  }
+  return value as T | null | undefined;
+};
+
+const unwrapStudentResource = (value: unknown): LaravelEleve | null => {
+  const unwrapped = unwrapNestedResource(value as any);
+  if (!unwrapped || typeof unwrapped !== "object") {
+    return unwrapped as LaravelEleve | null;
+  }
+
+  if ("eleve" in unwrapped && (unwrapped as { eleve?: unknown }).eleve) {
+    return unwrapNestedResource((unwrapped as { eleve?: unknown }).eleve) as LaravelEleve;
+  }
+
+  if ("student" in unwrapped && (unwrapped as { student?: unknown }).student) {
+    return unwrapNestedResource((unwrapped as { student?: unknown }).student) as LaravelEleve;
+  }
+
+  return unwrapped as LaravelEleve;
 };
 
 export interface LaravelClasse {
@@ -137,6 +161,9 @@ export interface LaravelExpense {
   expense_date?: string | null;
   receipt_number?: string | null;
   notes?: string | null;
+  status?: string | null;
+  approved_at?: string | null;
+  approved_by?: string | number | null;
 }
 
 export interface LaravelSalary {
@@ -150,6 +177,9 @@ export interface LaravelSalary {
   deductions?: number | null;
   net_amount?: number | null;
   notes?: string | null;
+  status?: string | null;
+  approved_at?: string | null;
+  approved_by?: string | number | null;
   teachers?: {
     id: string | number;
     profiles?: {
@@ -378,7 +408,7 @@ export const laravelStudentsApi = {
   getById: async (id: string): Promise<LaravelEleve> => {
     const payload = await apiRequest<any>(`/eleves/${id}`);
     const { data } = unwrapData<LaravelEleve>(payload);
-    return data;
+    return (unwrapStudentResource(data) ?? data) as LaravelEleve;
   },
   create: async (payload: Record<string, unknown>): Promise<LaravelEleve> => {
     const response = await apiRequest<any>("/eleves", {
@@ -884,6 +914,43 @@ export const laravelFinanceSettingsApi = {
   },
 };
 
+export const laravelImportExportApi = {
+  exportEntity: async (
+    entity: "students" | "classes" | "subjects" | "notes",
+    format: "csv" | "xls",
+    template = false,
+  ) => {
+    const templateFlag = template ? "&template=1" : "";
+    const url = `${API_BASE_URL}/export/${entity}?format=${format}${templateFlag}`;
+    const response = await fetch(url, { credentials: "include" });
+    if (!response.ok) {
+      throw new Error("Erreur lors de l'export");
+    }
+    const blob = await response.blob();
+    const disposition = response.headers.get("Content-Disposition");
+    const filenameMatch = disposition?.match(/filename=\"?([^\"]+)\"?/i);
+    const filename = filenameMatch?.[1] || `${entity}.${format === "csv" ? "csv" : "xls"}`;
+    return { blob, filename };
+  },
+  exportTemplate: async (entity: "students" | "classes" | "subjects" | "notes") => {
+    return laravelImportExportApi.exportEntity(entity, "csv", true);
+  },
+  importEntity: async (
+    entity: "students" | "classes" | "subjects" | "notes",
+    file: File,
+  ): Promise<{ imported: number; updated?: number; errors?: { row: number; message: string }[] }> => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await apiRequest<any>(`/import/${entity}`, {
+      method: "POST",
+      body: formData,
+    });
+    const { data } = unwrapData<any>(response);
+    return data;
+  },
+};
+
 export interface LaravelDashboardSummary {
   total_eleves: number;
   total_classes: number;
@@ -910,7 +977,7 @@ export const normalizeStudentName = (student: LaravelEleve) => {
 };
 
 export const normalizeStudentClasse = (student: LaravelEleve) => {
-  const classe = student.classe || student.class;
+  const classe = unwrapNestedResource(student.classe || student.class);
   if (!classe) {
     return null;
   }
@@ -921,12 +988,16 @@ export const normalizeStudentClasse = (student: LaravelEleve) => {
 };
 
 export const normalizeStudentPayments = (student: LaravelEleve) => {
-  const payments = student.paiements || student.payments || [];
-  const totalDueFromPayments = payments.reduce(
+  const rawPayments = student.paiements || student.payments || [];
+  const payments = Array.isArray(rawPayments)
+    ? rawPayments
+    : unwrapNestedResource(rawPayments) || [];
+  const normalizedPayments = Array.isArray(payments) ? payments : [];
+  const totalDueFromPayments = normalizedPayments.reduce(
     (sum, payment) => sum + Number(payment.amount || 0),
     0,
   );
-  const totalPaidFromPayments = payments.reduce(
+  const totalPaidFromPayments = normalizedPayments.reduce(
     (sum, payment) =>
       sum + Number(payment.paid_amount ?? payment.amount ?? 0),
     0,
@@ -935,6 +1006,6 @@ export const normalizeStudentPayments = (student: LaravelEleve) => {
   return {
     totalDue: student.total_due ?? totalDueFromPayments,
     totalPaid: student.total_paid ?? totalPaidFromPayments,
-    payments,
+    payments: normalizedPayments,
   };
 };

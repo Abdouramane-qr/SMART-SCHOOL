@@ -11,13 +11,26 @@ use Illuminate\Support\Facades\Cache;
 
 class ClasseController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(Classe::class, 'classe');
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
-        $schoolId = $request->integer('school_id');
+        $schoolId = $this->resolveSchoolId($request);
         $academicYearId = $request->integer('academic_year_id');
+        $user = $request->user();
+        $teacherClassIds = [];
+        if ($user?->hasRole('enseignant')) {
+            $teacherClassIds = $user->teacherClassIds();
+            if (empty($teacherClassIds)) {
+                $teacherClassIds = [0];
+            }
+        }
         $perPage = $request->integer('per_page');
         $page = $request->integer('page') ?: 1;
         $search = trim((string) $request->string('q'));
@@ -31,18 +44,18 @@ class ClasseController extends Controller
         $tags = CacheKey::tags($schoolId, $academicYearId);
         $cache = $tags ? Cache::tags($tags) : Cache::store();
 
-        $result = $cache->remember($key, now()->addMinutes(5), function () use ($request, $perPage, $search) {
+        $result = $cache->remember($key, now()->addMinutes(5), function () use ($request, $perPage, $search, $teacherClassIds, $schoolId, $academicYearId) {
             $query = Classe::query()
                 ->with(['school', 'academicYear'])
                 ->orderBy('level')
                 ->orderBy('name');
 
-            if ($request->filled('school_id')) {
-                $query->where('school_id', $request->integer('school_id'));
+            if ($schoolId) {
+                $query->where('school_id', $schoolId);
             }
 
-            if ($request->filled('academic_year_id')) {
-                $query->where('academic_year_id', $request->integer('academic_year_id'));
+            if ($academicYearId) {
+                $query->where('academic_year_id', $academicYearId);
             }
 
             if ($search !== '') {
@@ -51,6 +64,10 @@ class ClasseController extends Controller
                         ->where('name', 'ilike', "%{$search}%")
                         ->orWhere('level', 'ilike', "%{$search}%");
                 });
+            }
+
+            if (! empty($teacherClassIds)) {
+                $query->whereIn('id', $teacherClassIds);
             }
 
             return $perPage ? $query->paginate($perPage) : $query->get();
@@ -65,13 +82,21 @@ class ClasseController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'school_id' => ['required', 'integer', 'exists:schools,id'],
+            'school_id' => ['nullable', 'integer', 'exists:schools,id'],
             'academic_year_id' => ['nullable', 'integer', 'exists:academic_years,id'],
             'school_year_id' => ['nullable', 'integer', 'exists:academic_years,id'],
             'name' => ['required', 'string', 'max:100'],
             'level' => ['nullable', 'string', 'max:100'],
             'capacity' => ['nullable', 'integer', 'min:1'],
         ]);
+
+        $schoolId = $this->resolveSchoolId($request);
+        $validated['school_id'] = $schoolId;
+
+        if (empty($validated['school_id'])) {
+            $validated['school_id'] = $request->user()?->school_id
+                ?? \App\Models\School::query()->value('id');
+        }
 
         if (empty($validated['academic_year_id']) && ! empty($validated['school_year_id'])) {
             $validated['academic_year_id'] = $validated['school_year_id'];
@@ -89,6 +114,13 @@ class ClasseController extends Controller
      */
     public function show(Classe $classe)
     {
+        $user = request()->user();
+        if ($user?->hasRole('enseignant')) {
+            if (! in_array($classe->id, $user->teacherClassIds(), true)) {
+                return response()->json(['message' => 'Accès refusé à cette classe.'], 403);
+            }
+        }
+
         $schoolId = $classe->school_id;
         $academicYearId = $classe->academic_year_id;
         $key = CacheKey::key('classes:show', $schoolId, $academicYearId, [$classe->id]);
@@ -115,6 +147,9 @@ class ClasseController extends Controller
             'level' => ['sometimes', 'nullable', 'string', 'max:100'],
             'capacity' => ['sometimes', 'integer', 'min:1'],
         ]);
+
+        $schoolId = $this->resolveSchoolId($request);
+        $validated['school_id'] = $schoolId;
 
         if (array_key_exists('school_year_id', $validated) && empty($validated['academic_year_id'])) {
             $validated['academic_year_id'] = $validated['school_year_id'];

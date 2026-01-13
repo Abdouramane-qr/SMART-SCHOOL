@@ -11,7 +11,12 @@ use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
-    public function index()
+    public function __construct()
+    {
+        $this->authorizeResource(User::class, 'user');
+    }
+
+    public function index(Request $request)
     {
         $users = User::query()
             ->orderBy('full_name')

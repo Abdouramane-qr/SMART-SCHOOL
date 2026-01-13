@@ -515,7 +515,12 @@ export default function Absences() {
               {filteredAbsences.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                    Aucune absence trouvée
+                    <div className="mx-auto flex flex-col items-center gap-3 ui-empty-state rounded-xl p-6">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full ui-empty-state-icon">
+                        <AlertTriangle className="h-6 w-6" />
+                      </div>
+                      <span>Aucune absence trouvée</span>
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : (

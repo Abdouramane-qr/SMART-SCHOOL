@@ -156,7 +156,7 @@ export default function Profile() {
 
       <div className="grid gap-6 md:grid-cols-3">
         {/* Profile Card */}
-        <Card className="md:col-span-1">
+        <Card className="md:col-span-1" density="spacious">
           <CardHeader className="text-center">
             <div className="mx-auto mb-4">
               <Avatar className="h-24 w-24">
@@ -189,7 +189,7 @@ export default function Profile() {
         </Card>
 
         {/* Edit Form */}
-        <Card className="md:col-span-2">
+        <Card className="md:col-span-2" density="spacious">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <User className="h-5 w-5" />

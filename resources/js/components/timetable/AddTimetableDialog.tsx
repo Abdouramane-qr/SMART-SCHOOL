@@ -26,6 +26,7 @@ import {
   laravelClassroomsApi,
   laravelSchoolYearsApi,
 } from "@/services/laravelSchoolApi";
+import { validateTimetableEntry } from "@/lib/timetableUtils";
 import { useToast } from "@/hooks/use-toast";
 
 const DAYS = [
@@ -86,6 +87,16 @@ export function AddTimetableDialog({ onSuccess }: AddTimetableDialogProps) {
       toast({
         title: "Erreur",
         description: "Veuillez remplir les champs obligatoires",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const validation = validateTimetableEntry(formData.start_time, formData.end_time);
+    if (!validation.valid) {
+      toast({
+        title: "Erreur",
+        description: validation.error || "Plage horaire invalide",
         variant: "destructive",
       });
       return;

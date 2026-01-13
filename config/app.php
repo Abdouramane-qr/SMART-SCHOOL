@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Smart School'),
+    'name' => env('APP_NAME', 'SMART-SCHOOL'),
 
     /*
     |--------------------------------------------------------------------------

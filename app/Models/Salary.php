@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Support\CacheKey;
+use App\Services\FinanceService;
+use Illuminate\Support\Facades\Cache;
 
 class Salary extends Model
 {
@@ -19,6 +22,9 @@ class Salary extends Model
         'net_amount',
         'notes',
         'created_by',
+        'status',
+        'approved_at',
+        'approved_by',
     ];
 
     public function school(): BelongsTo
@@ -34,5 +40,24 @@ class Salary extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function approvedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    protected static function booted(): void
+    {
+        $flushCache = function (Salary $salary): void {
+            if (! $salary->school_id) {
+                return;
+            }
+            Cache::tags(CacheKey::tags($salary->school_id, null))->flush();
+            app(FinanceService::class)->invalidateStatsCache($salary->school_id, null);
+        };
+
+        static::saved($flushCache);
+        static::deleted($flushCache);
     }
 }

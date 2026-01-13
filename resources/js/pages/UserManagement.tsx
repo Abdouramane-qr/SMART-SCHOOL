@@ -224,7 +224,12 @@ export default function UserManagement() {
               {filteredUsers.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={4} className="text-center text-muted-foreground">
-                    Aucun utilisateur trouvé
+                    <div className="mx-auto flex flex-col items-center gap-3 ui-empty-state rounded-xl p-6">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full ui-empty-state-icon">
+                        <UserCog className="h-6 w-6" />
+                      </div>
+                      <span>Aucun utilisateur trouvé</span>
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : (

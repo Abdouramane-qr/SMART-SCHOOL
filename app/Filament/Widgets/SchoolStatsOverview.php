@@ -30,8 +30,14 @@ class SchoolStatsOverview extends StatsOverviewWidget
         }
 
         return [
-            Stat::make('Élèves', (string) $studentsQuery->count()),
-            Stat::make('Classes', (string) $classesQuery->count()),
+            Stat::make('Élèves', (string) $studentsQuery->count())
+                ->description('Effectif total')
+                ->icon('heroicon-o-users')
+                ->color('primary'),
+            Stat::make('Classes', (string) $classesQuery->count())
+                ->description('Classes actives')
+                ->icon('heroicon-o-academic-cap')
+                ->color('gray'),
         ];
     }
 

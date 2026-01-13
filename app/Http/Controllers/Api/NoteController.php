@@ -12,12 +12,25 @@ use Illuminate\Support\Facades\Cache;
 
 class NoteController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(Note::class, 'note');
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
-        $schoolId = $request->integer('school_id') ?: $request->user()?->school_id;
+        $schoolId = $this->resolveSchoolId($request);
+        $user = $request->user();
+        $teacherClassIds = [];
+        if ($user?->hasRole('enseignant')) {
+            $teacherClassIds = $user->teacherClassIds();
+            if (empty($teacherClassIds)) {
+                $teacherClassIds = [0];
+            }
+        }
         $academicYearId = $request->integer('academic_year_id');
         if (empty($academicYearId) && ! empty($schoolId)) {
             $academicYearId = AcademicYear::query()
@@ -32,6 +45,9 @@ class NoteController extends Controller
             ->map(fn ($value) => (int) trim($value))
             ->filter();
         $keyParts = [$perPage, $page, $request->integer('eleve_id'), $request->integer('matiere_id')];
+        if (! empty($teacherClassIds)) {
+            $keyParts[] = implode('-', $teacherClassIds);
+        }
         if ($studentIds->isNotEmpty()) {
             $keyParts[] = $studentIds->implode(',');
         }
@@ -39,7 +55,7 @@ class NoteController extends Controller
         $tags = CacheKey::tags($schoolId, $academicYearId);
         $cache = $tags ? Cache::tags($tags) : Cache::store();
 
-        $result = $cache->remember($key, now()->addMinutes(5), function () use ($request, $perPage, $studentIds) {
+        $result = $cache->remember($key, now()->addMinutes(5), function () use ($request, $perPage, $studentIds, $teacherClassIds, $schoolId, $academicYearId) {
             $query = Note::query()
                 ->select([
                     'id',
@@ -84,6 +100,10 @@ class NoteController extends Controller
                 $query->where('matiere_id', $request->integer('matiere_id'));
             }
 
+            if (! empty($teacherClassIds)) {
+                $query->whereIn('class_id', $teacherClassIds);
+            }
+
             return $query->paginate($perPage);
         });
 
@@ -114,6 +134,21 @@ class NoteController extends Controller
             'value.numeric' => 'La note doit etre un nombre.',
             'term.required' => 'La periode est obligatoire.',
         ]);
+
+        $schoolId = $this->resolveSchoolId($request);
+        $validated['school_id'] = $schoolId;
+
+        $user = $request->user();
+        if ($user?->hasRole('enseignant')) {
+            $classId = $validated['class_id'] ?? null;
+            if (! $classId) {
+                $eleve = \App\Models\Eleve::query()->find($validated['eleve_id']);
+                $classId = $eleve?->classe_id;
+            }
+            if ($classId && ! in_array($classId, $user->teacherClassIds(), true)) {
+                return response()->json(['message' => 'Accès refusé à cette classe.'], 403);
+            }
+        }
 
         if (empty($validated['academic_year_id'])) {
             if (! empty($validated['class_id'])) {
@@ -169,6 +204,14 @@ class NoteController extends Controller
      */
     public function show(Note $note)
     {
+        $user = request()->user();
+        if ($user?->hasRole('enseignant')) {
+            $classId = $note->class_id ?? $note->eleve?->classe_id;
+            if ($classId && ! in_array($classId, $user->teacherClassIds(), true)) {
+                return response()->json(['message' => 'Accès refusé à cette note.'], 403);
+            }
+        }
+
         $schoolId = $note->school_id;
         $academicYearId = $note->academic_year_id;
         $key = CacheKey::key('notes:show', $schoolId, $academicYearId, [$note->id]);
@@ -207,6 +250,17 @@ class NoteController extends Controller
             'value.numeric' => 'La note doit etre un nombre.',
         ]);
 
+        $schoolId = $this->resolveSchoolId($request);
+        $validated['school_id'] = $schoolId;
+
+        $user = $request->user();
+        if ($user?->hasRole('enseignant')) {
+            $classId = $validated['class_id'] ?? $note->class_id ?? $note->eleve?->classe_id;
+            if ($classId && ! in_array($classId, $user->teacherClassIds(), true)) {
+                return response()->json(['message' => 'Accès refusé à cette note.'], 403);
+            }
+        }
+
         $note->update($validated);
         Cache::tags(CacheKey::tags($note->school_id, $note->academic_year_id))->flush();
 
@@ -222,6 +276,14 @@ class NoteController extends Controller
      */
     public function destroy(Note $note)
     {
+        $user = request()->user();
+        if ($user?->hasRole('enseignant')) {
+            $classId = $note->class_id ?? $note->eleve?->classe_id;
+            if ($classId && ! in_array($classId, $user->teacherClassIds(), true)) {
+                return response()->json(['message' => 'Accès refusé à cette note.'], 403);
+            }
+        }
+
         $schoolId = $note->school_id;
         $academicYearId = $note->academic_year_id;
         $note->delete();

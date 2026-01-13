@@ -212,7 +212,12 @@ export default function Staff() {
               {paginatedTeachers.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center text-muted-foreground">
-                    Aucun enseignant trouvé
+                    <div className="mx-auto flex flex-col items-center gap-3 ui-empty-state rounded-xl p-6">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full ui-empty-state-icon">
+                        <UserPlus className="h-6 w-6" />
+                      </div>
+                      <span>Aucun enseignant trouvé</span>
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : (

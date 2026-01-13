@@ -40,6 +40,7 @@ import { StatsCard } from "@/components/dashboard/StatsCard";
 import { RoleGuard } from "@/components/RoleGuard";
 import { useUserRole } from "@/hooks/useUserRole";
 import { ActionTooltip } from "@/components/ui/ActionTooltip";
+import { ImportExportActions } from "@/components/ImportExportActions";
 import { 
   calculateWeightedAverage, 
   calculateGradeStats, 
@@ -154,6 +155,9 @@ export default function Grades() {
           </p>
         </div>
         <div className="flex gap-2">
+          <RoleGuard allowedRoles={["admin"]}>
+            <ImportExportActions entity="notes" onImported={refetch} />
+          </RoleGuard>
           <ActionTooltip tooltipKey="exportBulletin">
             <div><ExportBulletinDialog /></div>
           </ActionTooltip>
@@ -289,8 +293,10 @@ export default function Grades() {
               ))}
             </div>
           ) : filteredGrades.length === 0 ? (
-            <div className="text-center py-12">
-              <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <div className="text-center py-12 ui-empty-state rounded-xl">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full ui-empty-state-icon">
+                <BookOpen className="h-6 w-6" />
+              </div>
               <p className="text-muted-foreground">Aucune note trouvée</p>
             </div>
           ) : (

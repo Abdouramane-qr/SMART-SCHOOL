@@ -9,6 +9,11 @@ use Illuminate\Http\Request;
 
 class MessageController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(Message::class, 'message');
+    }
+
     public function index(Request $request)
     {
         $user = $request->user();

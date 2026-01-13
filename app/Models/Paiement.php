@@ -5,6 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use App\Support\CacheKey;
+use App\Services\FinanceService;
+use Illuminate\Support\Facades\Cache;
 
 class Paiement extends Model
 {
@@ -70,6 +73,22 @@ class Paiement extends Model
             }
         });
 
-        //
+        $flushCache = function (Paiement $paiement): void {
+            if (! $paiement->school_id) {
+                return;
+            }
+
+            $eleve = $paiement->eleve;
+            if (! $eleve && $paiement->eleve_id) {
+                $eleve = Eleve::query()->with('classe')->find($paiement->eleve_id);
+            }
+            $academicYearId = $eleve?->classe?->academic_year_id;
+
+            Cache::tags(CacheKey::tags($paiement->school_id, $academicYearId))->flush();
+            app(FinanceService::class)->invalidateStatsCache($paiement->school_id, $academicYearId);
+        };
+
+        static::saved($flushCache);
+        static::deleted($flushCache);
     }
 }

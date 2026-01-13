@@ -8,8 +8,20 @@ export interface LaravelUser {
   phone?: string | null;
   address?: string | null;
   avatar_url?: string | null;
+  approved?: boolean;
+  approved_at?: string | null;
   roles?: string[];
   permissions?: string[];
+  active_school?: {
+    id: number;
+    name: string;
+    code: string;
+  } | null;
+}
+
+export interface LaravelRegistrationResult {
+  user: LaravelUser;
+  message?: string | null;
 }
 
 export const laravelAuthApi = {
@@ -26,13 +38,13 @@ export const laravelAuthApi = {
     password: string;
     full_name: string;
     phone?: string | null;
-  }): Promise<LaravelUser> => {
+  }): Promise<LaravelRegistrationResult> => {
     const response = await apiRequest<any>("/register", {
       method: "POST",
       body: JSON.stringify(payload),
     });
     const { data } = unwrapData<LaravelUser>(response);
-    return data;
+    return { user: data, message: response?.message };
   },
   me: async (): Promise<LaravelUser | null> => {
     const response = await apiRequest<any>("/me");

@@ -46,6 +46,15 @@ interface EditStudentDialogProps {
     id: string;
     full_name: string;
     student_id: string;
+    first_name?: string | null;
+    last_name?: string | null;
+    gender?: string | null;
+    birth_date?: string | null;
+    date_of_birth?: string | null;
+    address?: string | null;
+    parent_name?: string | null;
+    parent_phone?: string | null;
+    parent_email?: string | null;
   } | null;
   isOpen: boolean;
   onClose: () => void;
@@ -55,6 +64,7 @@ interface EditStudentDialogProps {
 export function EditStudentDialog({ student, isOpen, onClose, onSuccess }: EditStudentDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof studentSchema>>({
     resolver: zodResolver(studentSchema),
@@ -81,22 +91,40 @@ export function EditStudentDialog({ student, isOpen, onClose, onSuccess }: EditS
     
     try {
       setLoading(true);
+      setError(null);
       const data = await laravelStudentsApi.getById(student.id);
       
       if (data) {
+        const merged = { ...student, ...data };
         form.reset({
-          student_id: data.student_id || "",
-          full_name: data.full_name || [data.first_name, data.last_name].filter(Boolean).join(" "),
-          gender: data.gender || "",
-          date_of_birth: data.birth_date || data.date_of_birth || "",
-          address: data.address || "",
-          parent_name: data.parent_name || "",
-          parent_phone: data.parent_phone || "",
-          parent_email: data.parent_email || "",
+          student_id: merged.student_id || "",
+          full_name:
+            merged.full_name ||
+            [merged.first_name, merged.last_name].filter(Boolean).join(" "),
+          gender: merged.gender || "",
+          date_of_birth: merged.birth_date || merged.date_of_birth || "",
+          address: merged.address || "",
+          parent_name: merged.parent_name || "",
+          parent_phone: merged.parent_phone || "",
+          parent_email: merged.parent_email || "",
+        });
+      } else {
+        form.reset({
+          student_id: student.student_id || "",
+          full_name:
+            student.full_name ||
+            [student.first_name, student.last_name].filter(Boolean).join(" "),
+          gender: student.gender || "",
+          date_of_birth: student.birth_date || student.date_of_birth || "",
+          address: student.address || "",
+          parent_name: student.parent_name || "",
+          parent_phone: student.parent_phone || "",
+          parent_email: student.parent_email || "",
         });
       }
     } catch (error) {
       toast.error("Erreur lors du chargement des données");
+      setError("Impossible de charger les informations de l'élève.");
     } finally {
       setLoading(false);
     }
@@ -152,6 +180,18 @@ export function EditStudentDialog({ student, isOpen, onClose, onSuccess }: EditS
         {loading ? (
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-neutral"></div>
+          </div>
+        ) : error ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <p>{error}</p>
+            <div className="mt-4 flex items-center justify-center gap-3">
+              <Button type="button" variant="outline" onClick={onClose}>
+                Fermer
+              </Button>
+              <Button type="button" onClick={fetchStudentDetails}>
+                Réessayer
+              </Button>
+            </div>
           </div>
         ) : (
           <Form {...form}>

@@ -89,6 +89,16 @@ class SalaryResource extends Resource
                 Textarea::make('notes')
                     ->label('Notes')
                     ->rows(3),
+                Select::make('status')
+                    ->label('Statut')
+                    ->options([
+                        'draft' => 'Brouillon',
+                        'submitted' => 'Soumis',
+                        'approved' => 'Validé',
+                        'paid' => 'Payé',
+                    ])
+                    ->required()
+                    ->default('submitted'),
                 Hidden::make('created_by')
                     ->default(fn () => auth()->id()),
             ]);
@@ -136,6 +146,22 @@ class SalaryResource extends Resource
                     ->label('Payé le')
                     ->date()
                     ->sortable(),
+                TextColumn::make('status')
+                    ->label('Statut')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'approved', 'paid' => 'success',
+                        'submitted' => 'warning',
+                        'draft' => 'gray',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'draft' => 'Brouillon',
+                        'submitted' => 'Soumis',
+                        'approved' => 'Validé',
+                        'paid' => 'Payé',
+                        default => $state,
+                    }),
                 TextColumn::make('school.name')
                     ->label('École')
                     ->sortable(),

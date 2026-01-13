@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\School;
+use App\Support\SchoolResolver;
 use Illuminate\Http\Request;
 
 class AuthController extends Controller
@@ -24,9 +26,31 @@ class AuthController extends Controller
                 'phone' => $user->phone,
                 'address' => $user->address,
                 'avatar_url' => $user->avatar_url,
+                'approved' => $user->isApproved(),
+                'approved_at' => $user->approved_at,
                 'roles' => $user->getRoleNames()->values()->all(),
                 'permissions' => $user->getAllPermissions()->pluck('name')->values()->all(),
+                'active_school' => $this->activeSchoolPayload(),
             ],
         ]);
+    }
+
+    private function activeSchoolPayload(): ?array
+    {
+        $schoolId = SchoolResolver::activeId();
+        if (! $schoolId) {
+            return null;
+        }
+
+        $school = School::query()->find($schoolId);
+        if (! $school) {
+            return null;
+        }
+
+        return [
+            'id' => $school->id,
+            'name' => $school->name,
+            'code' => $school->code,
+        ];
     }
 }

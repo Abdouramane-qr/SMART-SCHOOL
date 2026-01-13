@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect, useMemo, useState } from "react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -44,7 +44,10 @@ import { toast } from "sonner";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { ActionTooltip } from "@/components/ui/ActionTooltip";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { useQuery } from "@tanstack/react-query";
+import { ImportExportActions } from "@/components/ImportExportActions";
+import { RoleGuard } from "@/components/RoleGuard";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
 import {
   laravelClassesApi,
   laravelFinanceApi,
@@ -53,6 +56,7 @@ import {
   normalizeStudentClasse,
   normalizeStudentName,
   normalizeStudentPayments,
+  type LaravelEleve,
 } from "@/services/laravelSchoolApi";
 import { formatAmount, type Currency } from "@/lib/financeUtils";
 import { getStatusTextClass } from "@/lib/statusMap";
@@ -93,6 +97,15 @@ interface StudentWithPayments {
   full_name: string;
   student_id: string;
   class_name: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  gender?: string | null;
+  birth_date?: string | null;
+  date_of_birth?: string | null;
+  address?: string | null;
+  parent_name?: string | null;
+  parent_phone?: string | null;
+  parent_email?: string | null;
   total_paid: number;
   total_due: number;
 }
@@ -112,7 +125,34 @@ export default function Students() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isAuditOpen, setIsAuditOpen] = useState(false);
-  
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+  const [detailData, setDetailData] = useState<LaravelEleve | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState<string | null>(null);
+  const [pendingDetailsOpen, setPendingDetailsOpen] = useState(false);
+
+  const resolveDetailsError = (error: unknown) => {
+    if (error && typeof error === "object") {
+      const status = (error as { status?: number }).status;
+      const code = (error as { code?: string }).code;
+      if (status === 409 || code === "active_school_missing") {
+        return "Aucune école active n'est définie. Activez une école pour continuer.";
+      }
+      if (status === 403) {
+        if (code === "school_mismatch") {
+          return "Cet élève n'appartient pas à l'école active.";
+        }
+        return "Accès refusé. Vos permissions ne permettent pas d'accéder à cette fiche.";
+      }
+      if ((error as { message?: string }).message) {
+        return (error as { message: string }).message;
+      }
+    }
+    return "Impossible de charger les détails de l'élève.";
+  };
+
+  const queryClient = useQueryClient();
+
   const classesQuery = useQuery({
     queryKey: ["laravel", "classes"],
     queryFn: () => laravelClassesApi.getAll(),
@@ -159,6 +199,64 @@ export default function Students() {
     }
   }, [classesQuery.isError]);
 
+  useEffect(() => {
+    let canceled = false;
+    if (!selectedStudentId) {
+      setDetailData(null);
+      setDetailError(null);
+      setDetailLoading(false);
+      return;
+    }
+
+    setDetailLoading(true);
+    setDetailError(null);
+
+    laravelStudentsApi
+      .getById(selectedStudentId)
+      .then((data) => {
+        if (canceled) return;
+        setDetailData(data);
+      })
+      .catch((error) => {
+        if (canceled) return;
+        setDetailError(resolveDetailsError(error));
+        setDetailData(null);
+      })
+      .finally(() => {
+        if (canceled) return;
+        setDetailLoading(false);
+      });
+
+    return () => {
+      canceled = true;
+    };
+  }, [selectedStudentId]);
+
+  useEffect(() => {
+    if (!pendingDetailsOpen) {
+      return;
+    }
+
+    if (detailLoading) {
+      return;
+    }
+
+    if (detailError) {
+      toast.error(detailError);
+      setPendingDetailsOpen(false);
+      return;
+    }
+
+    if (!detailData || !selectedStudentId || String(detailData.id) !== String(selectedStudentId)) {
+      toast.error("Impossible de charger la fiche élève.");
+      setPendingDetailsOpen(false);
+      return;
+    }
+
+    setIsDetailsOpen(true);
+    setPendingDetailsOpen(false);
+  }, [pendingDetailsOpen, detailLoading, detailError, detailData, selectedStudentId]);
+
   const students = useMemo<StudentWithPayments[]>(() => {
     const rawStudents = studentsQuery.data?.items || [];
     return rawStudents.map((student) => {
@@ -168,13 +266,113 @@ export default function Students() {
         full_name: normalizeStudentName(student),
         student_id: student.student_id || "",
         class_name: normalizeStudentClasse(student),
+        first_name: student.first_name ?? null,
+        last_name: student.last_name ?? null,
+        gender: student.gender ?? null,
+        birth_date: student.birth_date ?? null,
+        date_of_birth: student.date_of_birth ?? null,
+        address: student.address ?? null,
+        parent_name: student.parent_name ?? null,
+        parent_phone: student.parent_phone ?? null,
+        parent_email: student.parent_email ?? null,
         total_paid: totalPaid,
         total_due: totalDue,
       };
     });
   }, [studentsQuery.data?.items]);
 
+  const { user, hasPermission } = useAuth();
+
   const classes = useMemo(() => classesQuery.data || [], [classesQuery.data]);
+  const selectedClassName = useMemo(() => {
+    if (selectedClass === "all") {
+      return "Toutes les classes";
+    }
+    const matched = classes.find((cls) => String(cls.id) === selectedClass);
+    if (!matched) {
+      return "Classe non assignée";
+    }
+    return `${matched.level} ${matched.name}`;
+  }, [classes, selectedClass]);
+
+  const activeSchoolLabel = useMemo(() => {
+    if (user?.active_school) {
+      return `${user.active_school.name} (${user.active_school.code})`;
+    }
+    return "École active non définie";
+  }, [user?.active_school]);
+
+  const roleLabel = useMemo(() => {
+    if (!user?.roles?.length) {
+      return "Rôle non attribué";
+    }
+    return user.roles.map((role) => {
+      if (role === "super_admin" || role === "admin_ecole") {
+        return "Administrateur général";
+      }
+      if (role === "admin") {
+        return "Administrateur";
+      }
+      if (role === "comptable") {
+        return "Comptable";
+      }
+      if (role === "enseignant") {
+        return "Enseignant";
+      }
+      if (role === "parent") {
+        return "Parent";
+      }
+      if (role === "eleve") {
+        return "Élève";
+      }
+      return role;
+    }).join(" / ");
+  }, [user?.roles]);
+
+  const canCreateStudent = hasPermission("eleve.create");
+  const canUpdateStudent = hasPermission("eleve.update");
+  const canDeleteStudent = hasPermission("eleve.delete");
+  const canManagePayments = hasPermission("paiement.create") || hasPermission("paiement.update");
+  const isReadOnlyRole = !canUpdateStudent;
+  const roleModeLabel = isReadOnlyRole ? "Lecture seule par rôle" : "Modifications autorisées";
+  const roleModeHint = isReadOnlyRole
+    ? "Vous ne pouvez que consulter les fiches dans l’école active."
+    : "Vous pouvez modifier les fiches et facturer les paiements dans l’école active.";
+
+  const detailPanelInfo = useMemo(() => {
+    if (detailData) {
+      const payments = normalizeStudentPayments(detailData);
+      return {
+        title: normalizeStudentName(detailData) || "Élève sélectionné",
+        studentId: detailData.student_id || selectedStudent?.student_id || "ID non défini",
+        classLabel: normalizeStudentClasse(detailData) || selectedStudent?.class_name || "Non assigné",
+        birthDate: detailData.birth_date || detailData.date_of_birth || selectedStudent?.birth_date || null,
+        gender: detailData.gender || selectedStudent?.gender || null,
+        address: detailData.address || selectedStudent?.address || null,
+        parentName: detailData.parent_name || selectedStudent?.parent_name || null,
+        parentPhone: detailData.parent_phone || selectedStudent?.parent_phone || null,
+        parentEmail: detailData.parent_email || selectedStudent?.parent_email || null,
+        payments: payments.payments,
+        totalPaid: payments.totalPaid,
+        totalDue: payments.totalDue,
+      };
+    }
+
+    return {
+      title: selectedStudent?.full_name || "Aucun élève sélectionné",
+      studentId: selectedStudent?.student_id || "ID non défini",
+      classLabel: selectedStudent?.class_name || "Non assigné",
+      birthDate: selectedStudent?.birth_date || selectedStudent?.date_of_birth || null,
+      gender: selectedStudent?.gender || null,
+      address: selectedStudent?.address || null,
+      parentName: selectedStudent?.parent_name || null,
+      parentPhone: selectedStudent?.parent_phone || null,
+      parentEmail: selectedStudent?.parent_email || null,
+      payments: [],
+      totalPaid: selectedStudent?.total_paid || 0,
+      totalDue: selectedStudent?.total_due || 0,
+    };
+  }, [detailData, selectedStudent]);
 
   const stats = useMemo(() => {
     const totalStudents = studentsQuery.data?.meta?.total ?? students.length;
@@ -207,33 +405,62 @@ export default function Students() {
   }, [searchTerm, selectedClass]);
 
   // Handlers
-  const handleViewDetails = (student: StudentWithPayments) => {
+  const selectStudent = (student: StudentWithPayments) => {
     setSelectedStudent(student);
+    setSelectedStudentId(student.id);
+  };
+
+  const handleViewDetails = (student: StudentWithPayments) => {
+    if (selectedStudentId !== student.id) {
+      selectStudent(student);
+      setPendingDetailsOpen(true);
+      return;
+    }
+
+    if (detailLoading) {
+      setPendingDetailsOpen(true);
+      return;
+    }
+
+    if (detailError) {
+      toast.error(detailError);
+      return;
+    }
+
+    if (!detailData || String(detailData.id) !== student.id) {
+      toast.error("Impossible de charger la fiche élève.");
+      return;
+    }
+
     setIsDetailsOpen(true);
   };
 
   const handleNewPayment = (student: StudentWithPayments) => {
-    setSelectedStudent(student);
+    if (!canManagePayments) {
+      return;
+    }
+    selectStudent(student);
     setIsPaymentOpen(true);
   };
 
   const handleEdit = (student: StudentWithPayments) => {
-    setSelectedStudent(student);
+    selectStudent(student);
     setIsEditOpen(true);
   };
 
   const handleDelete = (student: StudentWithPayments) => {
-    setSelectedStudent(student);
+    selectStudent(student);
     setIsDeleteOpen(true);
   };
 
   const handleViewAudit = (student: StudentWithPayments) => {
-    setSelectedStudent(student);
+    selectStudent(student);
     setIsAuditOpen(true);
   };
 
   const handleSuccess = () => {
-    studentsQuery.refetch();
+    queryClient.invalidateQueries({ queryKey: ["laravel", "students"] });
+    queryClient.invalidateQueries({ queryKey: ["laravel", "finance-stats"] });
   };
 
   const isLoading = studentsQuery.isLoading;
@@ -245,21 +472,49 @@ export default function Students() {
         description={`${totalItems} élève(s) inscrit(s)`}
         icon={Users}
         actions={
-          <ActionTooltip tooltipKey="addStudent">
-            <Button onClick={() => setIsAddOpen(true)}>
-              <UserPlus className="mr-2 h-4 w-4" />
-              Nouvel élève
-            </Button>
-          </ActionTooltip>
+          <div className="flex gap-2">
+            <RoleGuard allowedRoles={["admin"]}>
+              <ImportExportActions entity="students" onImported={handleSuccess} />
+            </RoleGuard>
+            <ActionTooltip tooltipKey="addStudent">
+              <Button
+                onClick={() => setIsAddOpen(true)}
+                disabled={!canCreateStudent}
+                title={
+                  !canCreateStudent
+                    ? "Votre rôle ne vous autorise pas à créer des élèves."
+                    : undefined
+                }
+              >
+                <UserPlus className="mr-2 h-4 w-4" />
+                Nouvel élève
+              </Button>
+            </ActionTooltip>
+          </div>
         }
       />
+
+      {/* Role / school context banner */}
+      <div className="rounded-2xl border border-dashed border-muted-foreground/30 bg-muted/70 p-4 text-sm text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <Badge variant="secondary" className="text-[0.65rem]">
+            École active
+          </Badge>
+          <span className="text-base text-foreground">{activeSchoolLabel}</span>
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+          <Badge variant={isReadOnlyRole ? "outline" : "secondary"}>{roleModeLabel}</Badge>
+          <span className="text-foreground">Rôles détectés : {roleLabel}</span>
+        </div>
+        <p className="mt-2 text-xs text-muted-foreground">{roleModeHint}</p>
+      </div>
 
       {/* Statistics */}
       <div className="grid gap-4 md:grid-cols-3">
         {isLoading ? (
           Array.from({ length: 3 }).map((_, index) => (
-            <Card key={index} className="shadow-md">
-              <CardContent className="p-4 space-y-3">
+            <Card key={index} density="compact">
+              <CardContent className="space-y-3">
                 <Skeleton className="h-4 w-28" />
                 <Skeleton className="h-8 w-20" />
                 <Skeleton className="h-3 w-24" />
@@ -273,24 +528,29 @@ export default function Students() {
               value={stats.totalStudents}
               icon={Users}
               trend={{ value: "0%", positive: true }}
+              density="compact"
             />
             <StatsCard
               title="Totalement payés"
               value={stats.totalPaid}
               icon={CheckCircle}
               trend={{ value: "0%", positive: true }}
+              density="compact"
             />
             <StatsCard
               title="Impayés"
               value={stats.unpaid}
               icon={XCircle}
               trend={{ value: "0%", positive: false }}
+              density="compact"
             />
           </>
         )}
       </div>
 
-      <Card className="shadow-md">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1.2fr)]">
+        <div className="space-y-4">
+          <Card density="compact">
         <CardHeader>
           <div className="flex items-center gap-4">
             <div className="relative flex-1">
@@ -317,6 +577,14 @@ export default function Students() {
             </Select>
           </div>
         </CardHeader>
+        <div className="flex flex-wrap items-center justify-between gap-3 px-6 text-xs text-muted-foreground">
+          <span>Filtre actif : {selectedClassName}</span>
+          <span>
+            {canCreateStudent
+              ? "Vous pouvez créer de nouvelles fiches élèves."
+              : "La création d’élèves n’est pas autorisée pour votre rôle."}
+          </span>
+        </div>
         <CardContent>
           <Table>
             <TableHeader>
@@ -346,7 +614,10 @@ export default function Students() {
               ) : paginatedStudents.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center text-muted-foreground">
-                    <div className="flex flex-col items-center gap-3 py-6">
+                    <div className="flex flex-col items-center gap-3 py-6 ui-empty-state rounded-xl">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full ui-empty-state-icon">
+                        <Users className="h-6 w-6" />
+                      </div>
                       <span>Aucun élève trouvé</span>
                       <ActionTooltip tooltipKey="addStudent">
                         <Button size="sm" onClick={() => setIsAddOpen(true)}>
@@ -361,7 +632,11 @@ export default function Students() {
                 paginatedStudents.map((student) => {
                   const remaining = student.total_due - student.total_paid;
                   return (
-                    <TableRow key={student.id}>
+                <TableRow
+                  key={student.id}
+                  className="cursor-pointer transition-colors hover:bg-muted/50"
+                  onClick={() => selectStudent(student)}
+                >
                       <TableCell className="font-medium">{student.student_id}</TableCell>
                       <TableCell>{student.full_name}</TableCell>
                       <TableCell>
@@ -389,10 +664,16 @@ export default function Students() {
                             </Button>
                           </ActionTooltip>
                           <ActionTooltip tooltipKey="studentPayment">
-                            <Button 
-                              variant="default" 
+                            <Button
+                              variant="default"
                               size="sm"
                               onClick={() => handleNewPayment(student)}
+                              disabled={!canManagePayments}
+                              title={
+                                !canManagePayments
+                                  ? "Seuls les rôles finance/comptabilité peuvent créer un paiement."
+                                  : undefined
+                              }
                             >
                               <DollarSign className="mr-1 h-3 w-3" />
                               Paiement
@@ -405,21 +686,30 @@ export default function Students() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => handleEdit(student)}>
-                                <Pencil className="mr-2 h-4 w-4" />
-                                Modifier
-                              </DropdownMenuItem>
+                              {canUpdateStudent ? (
+                                <DropdownMenuItem onClick={() => handleEdit(student)}>
+                                  <Pencil className="mr-2 h-4 w-4" />
+                                  Modifier
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem disabled>
+                                  <Pencil className="mr-2 h-4 w-4" />
+                                  Modification limitée
+                                </DropdownMenuItem>
+                              )}
                               <DropdownMenuItem onClick={() => handleViewAudit(student)}>
                                 <History className="mr-2 h-4 w-4" />
                                 Historique
                               </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onClick={() => handleDelete(student)}
-                                className="text-destructive"
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Supprimer
-                              </DropdownMenuItem>
+                              {canDeleteStudent && (
+                                <DropdownMenuItem
+                                  onClick={() => handleDelete(student)}
+                                  className="text-destructive"
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Supprimer
+                                </DropdownMenuItem>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
@@ -487,7 +777,167 @@ export default function Students() {
             </div>
           )}
         </CardContent>
-      </Card>
+          </Card>
+        </div>
+
+        <div className="space-y-4">
+          <Card className="h-full">
+            <CardHeader className="flex flex-col gap-2">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <CardTitle className="text-base font-semibold">Détails de l'élève</CardTitle>
+                  <CardDescription className="text-xs text-muted-foreground">
+                    Informations personnelles, parentales et financières.
+                  </CardDescription>
+                </div>
+                <Badge variant="outline" className="text-[0.65rem] uppercase tracking-wider">
+                  {selectedStudentId ? "Sélectionné" : "Aucune sélection"}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {detailLoading ? (
+                <div className="space-y-3">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                </div>
+              ) : detailError ? (
+                <p className="text-sm text-destructive">{detailError}</p>
+              ) : (
+                <>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="space-y-2 rounded-lg bg-muted/40 p-4 text-xs">
+                      <p className="text-muted-foreground">ID Élève</p>
+                      <p className="font-semibold text-foreground">{detailPanelInfo.studentId}</p>
+                    </div>
+                    <div className="space-y-2 rounded-lg bg-muted/40 p-4 text-xs">
+                      <p className="text-muted-foreground">Nom complet</p>
+                      <p className="font-semibold text-foreground">{detailPanelInfo.title}</p>
+                    </div>
+                    <div className="space-y-2 rounded-lg bg-muted/40 p-4 text-xs">
+                      <p className="text-muted-foreground">Classe</p>
+                      <p className="font-semibold text-foreground">{detailPanelInfo.classLabel}</p>
+                    </div>
+                    <div className="space-y-2 rounded-lg bg-muted/40 p-4 text-xs">
+                      <p className="text-muted-foreground">Date de naissance</p>
+                      <p className="font-semibold text-foreground">
+                        {detailPanelInfo.birthDate
+                          ? new Date(detailPanelInfo.birthDate).toLocaleDateString("fr-FR")
+                          : "Non renseigné"}
+                      </p>
+                    </div>
+                    <div className="space-y-2 rounded-lg bg-muted/40 p-4 text-xs">
+                      <p className="text-muted-foreground">Genre</p>
+                      <p className="font-semibold text-foreground">
+                        {detailPanelInfo.gender || "Non renseigné"}
+                      </p>
+                    </div>
+                    <div className="space-y-2 rounded-lg bg-muted/40 p-4 text-xs">
+                      <p className="text-muted-foreground">Adresse</p>
+                      <p className="font-semibold text-foreground">
+                        {detailPanelInfo.address || "Non renseigné"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                      Informations parentales
+                    </p>
+                    <div className="grid gap-3 pt-2 text-sm sm:grid-cols-2">
+                      <div>
+                        <p className="text-muted-foreground text-xs">Nom du parent</p>
+                        <p className="font-medium text-foreground">
+                          {detailPanelInfo.parentName || "Non renseigné"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-xs">Téléphone</p>
+                        <p className="font-medium text-foreground">
+                          {detailPanelInfo.parentPhone || "Non renseigné"}
+                        </p>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <p className="text-muted-foreground text-xs">Email</p>
+                        <p className="font-medium text-foreground">
+                          {detailPanelInfo.parentEmail || "Non renseigné"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                        Historique des paiements
+                      </p>
+                      <div className="flex items-center gap-2 text-[0.65rem] uppercase tracking-wide text-muted-foreground">
+                        <span>Total payé : {formatAmount(detailPanelInfo.totalPaid, defaultCurrency)}</span>
+                        <span>Total dû : {formatAmount(detailPanelInfo.totalDue, defaultCurrency)}</span>
+                      </div>
+                    </div>
+
+                    {detailPanelInfo.payments.length === 0 ? (
+                      <p className="text-center text-sm text-muted-foreground">
+                        Aucun paiement enregistré
+                      </p>
+                    ) : (
+                      <div className="max-h-48 overflow-y-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Date</TableHead>
+                              <TableHead>Montant</TableHead>
+                              <TableHead>Méthode</TableHead>
+                              <TableHead>Statut</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {detailPanelInfo.payments.map((payment) => (
+                              <TableRow key={payment.id}>
+                                <TableCell>
+                                  {payment.payment_date
+                                    ? new Date(payment.payment_date).toLocaleDateString("fr-FR")
+                                    : "—"}
+                                </TableCell>
+                                <TableCell>
+                                  {formatAmount(payment.paid_amount ?? payment.amount ?? 0, defaultCurrency)}
+                                </TableCell>
+                                <TableCell>{payment.method || payment.payment_type || "—"}</TableCell>
+                                <TableCell>
+                                  <Badge variant="outline">{payment.status || "—"}</Badge>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <Button
+                      onClick={() => selectedStudent && handleViewDetails(selectedStudent)}
+                      disabled={!selectedStudent}
+                      fullWidth
+                    >
+                      Voir la fiche complète
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => selectedStudent && handleNewPayment(selectedStudent)}
+                      disabled={!selectedStudent || !canManagePayments}
+                    >
+                      Enregistrer un paiement
+                    </Button>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
 
       {/* Modals */}
       <Suspense fallback={null}>
@@ -510,7 +960,8 @@ export default function Students() {
               isOpen={isPaymentOpen}
               onClose={() => {
                 setIsPaymentOpen(false);
-                studentsQuery.refetch();
+                queryClient.invalidateQueries({ queryKey: ["laravel", "students"] });
+                queryClient.invalidateQueries({ queryKey: ["laravel", "finance-stats"] });
               }}
               currency={defaultCurrency}
             />

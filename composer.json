@@ -52,6 +52,7 @@
         ],
         "test": [
             "@php artisan config:clear --ansi",
+            "@php -r \"if (!file_exists('vendor/bin/phpunit')) { fwrite(STDERR, 'phpunit not installed. Run composer install --dev.\\n'); exit(1); }\"",
             "@php artisan test"
         ],
         "post-autoload-dump": [

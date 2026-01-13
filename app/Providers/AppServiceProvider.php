@@ -19,8 +19,10 @@ use App\Listeners\AuditLogger;
 use App\Listeners\InvalidateFinanceCache;
 use App\Listeners\RecordAssetStatusChange;
 use App\Listeners\UpdateFinanceStats;
+use App\Services\GlobalAuditLogger;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -72,5 +74,29 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(AssetStatusChanged::class, [InvalidateFinanceCache::class, 'handle']);
         Event::listen(AssetStatusChanged::class, [RecordAssetStatusChange::class, 'handle']);
         Event::listen(AssetStatusChanged::class, [AuditLogger::class, 'handle']);
+
+        Event::listen('eloquent.created: *', function (string $event, array $data): void {
+            $model = $data[0] ?? null;
+            if (! $model instanceof Model || ! GlobalAuditLogger::shouldLogModel($model)) {
+                return;
+            }
+            GlobalAuditLogger::logModelEvent('created', $model);
+        });
+
+        Event::listen('eloquent.updated: *', function (string $event, array $data): void {
+            $model = $data[0] ?? null;
+            if (! $model instanceof Model || ! GlobalAuditLogger::shouldLogModel($model)) {
+                return;
+            }
+            GlobalAuditLogger::logModelEvent('updated', $model);
+        });
+
+        Event::listen('eloquent.deleted: *', function (string $event, array $data): void {
+            $model = $data[0] ?? null;
+            if (! $model instanceof Model || ! GlobalAuditLogger::shouldLogModel($model)) {
+                return;
+            }
+            GlobalAuditLogger::logModelEvent('deleted', $model);
+        });
     }
 }

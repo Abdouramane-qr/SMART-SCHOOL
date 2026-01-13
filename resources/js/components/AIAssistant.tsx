@@ -26,11 +26,11 @@ interface Message {
 }
 
 const ROLE_LABELS: Record<AppRole, string> = {
-  admin: "Admin AI",
-  comptable: "Manager AI",
-  enseignant: "Teacher AI",
-  eleve: "Student AI",
-  parent: "Parent AI",
+  admin: "Admin AI Agent",
+  comptable: "Accountant AI Agent",
+  enseignant: "Teacher AI Agent",
+  eleve: "Student AI Agent",
+  parent: "Parent AI Agent",
 };
 
 const ROLE_COLORS: Record<AppRole, string> = {
@@ -43,31 +43,38 @@ const ROLE_COLORS: Record<AppRole, string> = {
 
 const QUICK_PROMPTS: Record<AppRole, string[]> = {
   admin: [
-    "Résumé des statistiques de l'école",
-    "Élèves avec paiements en retard",
-    "Analyse des performances globales",
+    "Analyse des statistiques de l'ecole",
+    "Resume de la performance financiere",
+    "Anomalies ou risques a surveiller",
   ],
   comptable: [
-    "État des paiements du mois",
-    "Élèves en retard de paiement",
-    "Prévisions de trésorerie",
+    "Resume des paiements et depenses",
+    "Etat des statuts de paiement",
+    "Tendance de tresorerie",
   ],
   enseignant: [
-    "Élèves en difficulté dans mes classes",
-    "Analyse des notes récentes",
-    "Suggestions de remédiation",
+    "Eleves en difficulte dans mes classes",
+    "Analyse des notes et moyennes",
+    "Aide pour organiser mon emploi du temps",
   ],
   eleve: [
-    "Explique mes dernières notes",
-    "Comment améliorer ma moyenne?",
-    "Aide-moi à organiser mes révisions",
+    "Explique mes notes et ma moyenne",
+    "Explique mon classement",
+    "Aide-moi a comprendre mon emploi du temps",
   ],
   parent: [
-    "Résumé scolaire de mes enfants",
-    "Y a-t-il des paiements en attente?",
-    "Comment aider mon enfant à progresser?",
+    "Resume scolaire de mes enfants",
+    "Explication des notes et absences",
+    "Conseils pour aider mon enfant",
   ],
 };
+
+const FORMAT_PROMPTS = [
+  "Format: court",
+  "Format: tableau",
+  "Format: decision",
+  "Format: actions",
+];
 
 export function AIAssistant() {
   const { roles } = useUserRole();
@@ -123,7 +130,7 @@ export function AIAssistant() {
       }
     } catch (error) {
       console.error("AI Assistant error:", error);
-      toast.error(error instanceof Error ? error.message : "Erreur de l'assistant");
+      toast.error("Assistant momentanément indisponible");
       
       // Remove empty assistant message on error
       setMessages((prev) => {
@@ -137,17 +144,27 @@ export function AIAssistant() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
-    streamChat(input.trim());
+    try {
+      await streamChat(input.trim());
+    } catch (error) {
+      console.error("AI Assistant error:", error);
+      toast.error("Assistant momentanément indisponible");
+    }
     setInput("");
   };
 
-  const handleQuickPrompt = (prompt: string) => {
+  const handleQuickPrompt = async (prompt: string) => {
     if (isLoading) return;
-    streamChat(prompt);
+    try {
+      await streamChat(prompt);
+    } catch (error) {
+      console.error("AI Assistant error:", error);
+      toast.error("Assistant momentanément indisponible");
+    }
   };
 
   const clearChat = () => {
@@ -162,12 +179,12 @@ export function AIAssistant() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className={cn(
-            "fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-sm",
-            "flex items-center justify-center transition-all hover:scale-110",
-            "bg-primary/10 text-primary-foreground",
-            "animate-in fade-in slide-in-from-bottom-4"
-          )}
+            className={cn(
+              "fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-sm",
+              "flex items-center justify-center transition-all hover:scale-110",
+              "bg-primary/10 text-primary",
+              "animate-in fade-in slide-in-from-bottom-4"
+            )}
         >
           <Bot className="h-6 w-6" />
           <span className="absolute -top-1 -right-1 flex h-4 w-4">
@@ -264,6 +281,24 @@ export function AIAssistant() {
                           <Badge
                             key={i}
                             variant="secondary"
+                            className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors text-xs"
+                            onClick={() => handleQuickPrompt(prompt)}
+                          >
+                            {prompt}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground text-center">
+                        Formats:
+                      </p>
+                      <div className="flex flex-wrap gap-2 justify-center">
+                        {FORMAT_PROMPTS.map((prompt, i) => (
+                          <Badge
+                            key={i}
+                            variant="outline"
                             className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors text-xs"
                             onClick={() => handleQuickPrompt(prompt)}
                           >

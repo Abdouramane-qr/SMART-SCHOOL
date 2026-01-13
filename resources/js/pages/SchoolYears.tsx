@@ -120,8 +120,10 @@ export default function SchoolYears() {
               ))}
             </div>
           ) : filteredYears.length === 0 ? (
-            <div className="text-center py-12">
-              <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <div className="text-center py-12 ui-empty-state rounded-xl">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full ui-empty-state-icon">
+                <Calendar className="h-6 w-6" />
+              </div>
               <p className="text-muted-foreground">Aucune année scolaire trouvée</p>
             </div>
           ) : (

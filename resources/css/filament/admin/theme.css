@@ -1,12 +1,30 @@
+@import url("https://fonts.bunny.net/css?family=source-sans-3:400,500,600,700&display=swap");
 @import '../../../../vendor/filament/filament/resources/css/theme.css';
 @config '../../../../tailwind.config.js';
 
-@import url("https://fonts.bunny.net/css?family=source-sans-3:400,500,600,700&display=swap");
-
+/* Custom Filament theme overrides (SMART-SCHOOL). */
 :root {
   --font-family: "Source Sans 3", system-ui, sans-serif;
+  --app-bg: 210 40% 98%;
+  --card-bg: 0 0% 100%;
+  --text-main: 222 47% 11%;
+  --text-muted: 214 16% 38%;
+  --border-color: 214 18% 82%;
+  --background: var(--app-bg);
+  --foreground: var(--text-main);
+  --card: var(--card-bg);
+  --card-foreground: var(--text-main);
+  --muted: var(--app-bg);
+  --muted-foreground: var(--text-muted);
+  --border: var(--border-color);
+  --input: var(--border-color);
+  --ring: 215 98% 56%;
+  --primary: 215 98% 56%;
+  --primary-foreground: 0 0% 100%;
+  --primary-hover: 215 98% 52%;
+  --gradient-primary: linear-gradient(135deg, hsl(215 98% 56%) 0%, hsl(199 92% 54%) 100%);
+  --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(210 40% 98%) 100%);
 
-  /* Align Filament primary with app design tokens */
   --primary-50: 235 243 255;
   --primary-100: 216 232 255;
   --primary-200: 178 210 254;
@@ -18,29 +36,6 @@
   --primary-800: 2 78 186;
   --primary-900: 1 60 140;
 
-  /* Status colors aligned with app semantics */
-  --success-50: 235 243 255;
-  --success-100: 216 232 255;
-  --success-200: 178 210 254;
-  --success-300: 136 185 253;
-  --success-400: 100 164 252;
-  --success-500: 73 148 253;
-  --success-600: 33 126 253;
-  --success-700: 2 98 232;
-  --success-800: 2 78 186;
-  --success-900: 1 60 140;
-
-  --warning-50: 241 245 247;
-  --warning-100: 241 245 247;
-  --warning-200: 179 179 179;
-  --warning-300: 179 179 179;
-  --warning-400: 179 179 179;
-  --warning-500: 179 179 179;
-  --warning-600: 120 120 120;
-  --warning-700: 90 90 90;
-  --warning-800: 60 60 60;
-  --warning-900: 30 30 30;
-
   --danger-50: 254 242 242;
   --danger-100: 254 226 226;
   --danger-200: 254 202 202;
@@ -51,17 +46,82 @@
   --danger-700: 185 28 28;
   --danger-800: 153 27 27;
   --danger-900: 127 29 29;
+}
 
-  --gray-50: 241 245 247;
-  --gray-100: 241 245 247;
-  --gray-200: 179 179 179;
-  --gray-300: 179 179 179;
-  --gray-400: 179 179 179;
-  --gray-500: 179 179 179;
-  --gray-600: 60 60 60;
-  --gray-700: 45 45 45;
-  --gray-800: 30 30 30;
-  --gray-900: 15 15 15;
+.dark {
+  --app-bg: 222 47% 11%;
+  --card-bg: 222 35% 16%;
+  --text-main: 210 40% 98%;
+  --text-muted: 214 16% 70%;
+  --border-color: 214 20% 26%;
+  --background: var(--app-bg);
+  --foreground: var(--text-main);
+  --card: var(--card-bg);
+  --card-foreground: var(--text-main);
+  --muted: 214 20% 26%;
+  --muted-foreground: var(--text-muted);
+  --border: var(--border-color);
+  --input: var(--border-color);
+  --ring: 215 98% 56%;
+  --primary: 215 98% 56%;
+  --primary-foreground: 0 0% 100%;
+  --primary-hover: 215 98% 62%;
+  --gradient-primary: linear-gradient(135deg, hsl(215 98% 56%) 0%, hsl(199 92% 54%) 100%);
+  --gradient-card: linear-gradient(180deg, hsl(222 35% 16%) 0%, hsl(222 35% 16%) 100%);
+}
+
+.fi-layout {
+  background-color: hsl(var(--app-bg));
+  color: hsl(var(--text-main));
+}
+
+.fi-topbar {
+  background-color: hsl(var(--card-bg));
+  color: hsl(var(--text-main));
+  border-bottom: 1px solid hsl(var(--border-color));
+}
+
+.fi-main {
+  color: hsl(var(--text-main));
+}
+
+.fi-sidebar,
+.fi-sidebar-header {
+  background-color: hsl(var(--card-bg)) !important;
+  color: hsl(var(--text-main));
+  border-color: hsl(var(--border-color));
+}
+
+.fi-sidebar-item-button,
+.fi-sidebar-group-label,
+.fi-sidebar-group-icon {
+  color: hsl(var(--text-main));
+}
+
+.fi-ta-ctn,
+.fi-ta-record,
+.fi-ta-panel {
+  background-color: hsl(var(--card-bg)) !important;
+  color: hsl(var(--text-main));
+  border-color: hsl(var(--border-color));
+}
+
+.fi-ta-header-heading,
+.fi-ta-summary-header-cell,
+.fi-ta-header-cell-label {
+  color: hsl(var(--text-main));
+}
+
+.fi-ta-header-description,
+.fi-ta-empty-state-description {
+  color: hsl(var(--text-muted));
+}
+
+.fi-btn.fi-color-gray,
+.fi-btn.fi-btn-color-gray {
+  background-color: hsl(var(--card-bg)) !important;
+  color: hsl(var(--text-main)) !important;
+  border: 1px solid hsl(var(--border-color));
 }
 
 .fi-btn.fi-btn-color-primary {
@@ -76,4 +136,299 @@
 .fi-btn.fi-btn-color-primary:focus-visible {
   outline: 2px solid rgb(var(--primary-600));
   outline-offset: 2px;
+}
+
+.fi-wi-stats-overview-stat {
+  background-color: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 10px 24px -20px hsl(var(--primary) / 0.55);
+  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
+}
+
+.fi-wi-stats-overview-stat::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: var(--gradient-primary);
+  opacity: 0.9;
+}
+
+.fi-wi-stats-overview-stat:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 32px -22px hsl(var(--primary) / 0.7);
+  border-color: hsl(var(--primary) / 0.35);
+}
+
+.fi-wi-stats-overview-stat-icon {
+  color: hsl(var(--primary));
+}
+
+.fi-wi-stats-overview-stat-label,
+.fi-wi-stats-overview-stat-description {
+  color: hsl(var(--text-muted));
+}
+
+.fi-wi-stats-overview-stat-value {
+  color: hsl(var(--text-main));
+}
+
+.fi-wi-chart .fi-section {
+  background-color: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.fi-wi {
+  gap: 1.25rem;
+}
+
+.fi-wi-widget {
+  height: 100%;
+}
+
+@media (min-width: 1024px) {
+  .fi-wi {
+    gap: 2rem;
+  }
+}
+
+.fi-section:not(.fi-aside) {
+  background-color: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 1.25rem;
+  box-shadow: 0 14px 28px -26px hsl(var(--primary) / 0.6);
+}
+
+.fi-section:not(.fi-aside),
+.fi-ta-ctn {
+  position: relative;
+  overflow: hidden;
+}
+
+.fi-section:not(.fi-aside)::before,
+.fi-ta-ctn::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--gradient-primary);
+  opacity: 0.85;
+}
+
+.fi-section-header {
+  border-bottom: 1px solid hsl(var(--border));
+  background: linear-gradient(
+    180deg,
+    hsl(var(--card)) 0%,
+    hsl(var(--card)) 55%,
+    hsl(var(--background)) 100%
+  );
+}
+
+.fi-section-header,
+.fi-section-content,
+.fi-section-footer {
+  padding: 0.75rem 1rem !important;
+}
+
+@media (min-width: 640px) {
+  .fi-section-header,
+  .fi-section-content,
+  .fi-section-footer {
+    padding: 1rem 1.25rem !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .fi-section-header,
+  .fi-section-content,
+  .fi-section-footer {
+    padding: 1.25rem 1.5rem !important;
+  }
+}
+
+.fi-section-header-heading {
+  color: hsl(var(--text-main));
+}
+
+.fi-section-header-description {
+  color: hsl(var(--text-muted));
+}
+
+.fi-section-header-icon {
+  color: hsl(var(--primary));
+}
+
+.fi-section-content-ctn,
+.fi-section-footer {
+  border-color: hsl(var(--border));
+}
+
+.fi-ta-ctn,
+.fi-ta-panel {
+  background-color: hsl(var(--card)) !important;
+  border: 1px solid hsl(var(--border));
+  border-radius: 1.25rem;
+  box-shadow: 0 16px 30px -26px hsl(var(--primary) / 0.45);
+}
+
+.fi-ta-record.rounded-xl {
+  border: 1px solid hsl(var(--border));
+  border-radius: 1.25rem;
+  box-shadow: 0 16px 30px -26px hsl(var(--primary) / 0.45);
+}
+
+.fi-ta-header {
+  background-color: hsl(var(--card));
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.fi-ta-header-heading,
+.fi-ta-header-cell-label,
+.fi-ta-summary-header-cell,
+.fi-ta-summary-row-heading {
+  color: hsl(var(--text-main));
+}
+
+.fi-ta-header-description,
+.fi-ta-empty-state-description,
+.fi-ta-placeholder {
+  color: hsl(var(--text-muted));
+}
+
+.fi-ta-group-header,
+.fi-ta-summary-header-row,
+.fi-ta-selection-indicator,
+.fi-ta-reorder-indicator,
+.fi-ta-filter-indicators,
+.fi-ta-group-selection-cell {
+  background-color: hsl(var(--background));
+}
+
+.fi-fo-component-ctn {
+  gap: 1.25rem;
+}
+
+@media (min-width: 1024px) {
+  .fi-fo-component-ctn {
+    gap: 1.75rem;
+  }
+}
+
+.fi-resource-list-records-page > section {
+  gap: 1.5rem;
+}
+
+.fi-resource-create-record-page > section,
+.fi-resource-edit-record-page > section,
+.fi-resource-view-record-page > section {
+  gap: 2rem;
+}
+
+.fi-resource-manage-related-records-page > section {
+  gap: 1.75rem;
+}
+
+@media (min-width: 1024px) {
+  .fi-resource-list-records-page > section {
+    gap: 2rem;
+  }
+
+  .fi-resource-create-record-page > section,
+  .fi-resource-edit-record-page > section,
+  .fi-resource-view-record-page > section {
+    gap: 2.5rem;
+  }
+
+  .fi-resource-manage-related-records-page > section {
+    gap: 2.25rem;
+  }
+}
+
+.fi-in-key-value,
+.fi-fo-builder-item,
+.fi-fo-repeater-item {
+  background-color: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 1.25rem;
+  box-shadow: 0 16px 30px -26px hsl(var(--primary) / 0.45);
+}
+
+.fi-in-key-value,
+.fi-fo-builder-item,
+.fi-fo-repeater-item {
+  position: relative;
+  overflow: hidden;
+}
+
+.fi-in-key-value::before,
+.fi-fo-builder-item::before,
+.fi-fo-repeater-item::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--gradient-primary);
+  opacity: 0.85;
+}
+
+.fi-fo-repeater-item-header,
+.fi-fo-builder-item-header {
+  background-color: hsl(var(--background));
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.fi-fo-field-wrp {
+  position: relative;
+}
+
+.fi-fo-field-wrp:has(sup) {
+  padding-left: 0.875rem;
+}
+
+.fi-fo-field-wrp:has(sup)::before {
+  content: "";
+  position: absolute;
+  inset: 0.125rem auto 0.125rem 0;
+  width: 3px;
+  border-radius: 999px;
+  background: var(--gradient-primary);
+  opacity: 0.35;
+  transition: opacity 150ms ease, background-color 150ms ease;
+}
+
+.fi-fo-field-wrp:has(sup):focus-within::before {
+  opacity: 0.85;
+}
+
+.fi-resource-create-record-page .fi-form-actions,
+.fi-resource-edit-record-page .fi-form-actions {
+  padding: 0.75rem 1rem;
+}
+
+.fi-resource-manage-related-records-page .fi-form-actions {
+  padding: 0.75rem 1rem;
+}
+
+@media (min-width: 640px) {
+  .fi-resource-create-record-page .fi-form-actions,
+  .fi-resource-edit-record-page .fi-form-actions {
+    padding: 1rem 1.25rem;
+  }
+
+  .fi-resource-manage-related-records-page .fi-form-actions {
+    padding: 1rem 1.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .fi-resource-create-record-page .fi-form-actions,
+  .fi-resource-edit-record-page .fi-form-actions {
+    padding: 1.25rem 1.5rem;
+  }
+
+  .fi-resource-manage-related-records-page .fi-form-actions {
+    padding: 1.25rem 1.5rem;
+  }
 }

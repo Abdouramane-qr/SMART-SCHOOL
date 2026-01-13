@@ -16,7 +16,7 @@ class DashboardController extends Controller
 {
     public function summary(Request $request)
     {
-        $schoolId = $request->integer('school_id');
+        $schoolId = $this->resolveSchoolId($request);
         $academicYearId = $request->integer('academic_year_id');
 
         $key = CacheKey::key('dashboard:summary', $schoolId, $academicYearId);

@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Support\CacheKey;
+use Illuminate\Support\Facades\Cache;
 
 class Classe extends Model
 {
@@ -35,5 +37,18 @@ class Classe extends Model
     public function enseignants(): BelongsToMany
     {
         return $this->belongsToMany(Enseignant::class, 'classe_enseignant');
+    }
+
+    protected static function booted(): void
+    {
+        $flushCache = function (Classe $classe): void {
+            if (! $classe->school_id) {
+                return;
+            }
+            Cache::tags(CacheKey::tags($classe->school_id, $classe->academic_year_id))->flush();
+        };
+
+        static::saved($flushCache);
+        static::deleted($flushCache);
     }
 }

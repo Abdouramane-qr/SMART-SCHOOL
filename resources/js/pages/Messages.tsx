@@ -69,7 +69,7 @@ interface Profile {
 }
 
 export default function Messages() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -105,7 +105,10 @@ export default function Messages() {
         laravelMessagesApi.getInbox(),
         laravelMessagesApi.getSent(),
       ]);
-      const profilesData = await laravelUsersApi.getAll();
+      const canListProfiles = hasPermission("user.view_any");
+      const profilesData = canListProfiles
+        ? await laravelUsersApi.getAll()
+        : [];
       const availableProfiles = profilesData
         .filter((profile) => profile.id !== user.id)
         .map((profile) => ({
@@ -328,7 +331,7 @@ export default function Messages() {
       {/* Main Content */}
       <div className="grid gap-4 md:grid-cols-3 h-[calc(100vh-280px)] min-h-[500px]">
         {/* Message List */}
-        <Card className="md:col-span-1 flex flex-col">
+        <Card className="md:col-span-1 flex flex-col" density="compact">
           <CardHeader className="pb-3">
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "inbox" | "sent")}>
               <TabsList className="w-full">
@@ -362,8 +365,10 @@ export default function Messages() {
             </div>
             <ScrollArea className="flex-1">
               {filteredMessages.length === 0 ? (
-                <div className="p-6 text-center text-muted-foreground">
-                  <Mail className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <div className="p-6 text-center text-muted-foreground ui-empty-state rounded-xl">
+                  <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full ui-empty-state-icon">
+                    <Mail className="h-6 w-6" />
+                  </div>
                   <p>Aucun message</p>
                   <ActionTooltip tooltipKey="composeMessage">
                     <Button
@@ -441,10 +446,10 @@ export default function Messages() {
         </Card>
 
         {/* Message Detail */}
-        <Card className="md:col-span-2 flex flex-col">
+        <Card className="md:col-span-2 flex flex-col" density="spacious">
           {selectedMessage ? (
             <>
-              <CardHeader className="border-b">
+              <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
                     <Avatar className="h-12 w-12">
@@ -503,8 +508,10 @@ export default function Messages() {
             </>
           ) : (
             <div className="flex-1 flex items-center justify-center text-muted-foreground">
-              <div className="text-center">
-                <MailOpen className="h-16 w-16 mx-auto mb-4 opacity-50" />
+              <div className="text-center ui-empty-state rounded-xl p-8">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full ui-empty-state-icon">
+                  <MailOpen className="h-8 w-8" />
+                </div>
                 <p>Sélectionnez un message pour le lire</p>
               </div>
             </div>

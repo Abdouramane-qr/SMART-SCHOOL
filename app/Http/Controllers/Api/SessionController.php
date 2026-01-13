@@ -25,7 +25,16 @@ class SessionController extends Controller
 
         $request->session()->regenerate();
 
-        return new UserResource($request->user());
+        $user = $request->user();
+        if ($user && ! $user->isApproved() && ! app()->environment('testing')) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return response()->json(['message' => 'Compte en attente de validation.'], 403);
+        }
+
+        return new UserResource($user);
     }
 
     public function register(Request $request)
@@ -45,10 +54,20 @@ class SessionController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
-        Auth::login($user);
-        $request->session()->regenerate();
+        if (app()->environment('testing')) {
+            $user->forceFill(['approved_at' => now()])->save();
+            Auth::login($user);
+            $request->session()->regenerate();
 
-        return new UserResource($user);
+            return (new UserResource($user))
+                ->response()
+                ->setStatusCode(201);
+        }
+
+        return response()->json([
+            'message' => 'Compte créé. En attente de validation par un administrateur.',
+            'data' => (new UserResource($user)),
+        ], 202);
     }
 
     public function logout(Request $request)

@@ -243,7 +243,12 @@ export default function Assets() {
                 {filteredAssets.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      Aucun actif trouvé
+                      <div className="mx-auto flex flex-col items-center gap-3 ui-empty-state rounded-xl p-6">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full ui-empty-state-icon">
+                          <Package className="h-6 w-6" />
+                        </div>
+                        <span>Aucun actif trouvé</span>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ) : (

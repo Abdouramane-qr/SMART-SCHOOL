@@ -18,7 +18,14 @@ import { EditTimetableDialog } from "@/components/timetable/EditTimetableDialog"
 import { DeleteTimetableDialog } from "@/components/timetable/DeleteTimetableDialog";
 import { RoleGuard } from "@/components/RoleGuard";
 import { useUserRole } from "@/hooks/useUserRole";
-import { TIME_SLOTS, DAYS_LABELS, getSubjectColor, formatDuration, calculateDuration } from "@/lib/timetableUtils";
+import {
+  TIME_SLOTS,
+  DAYS_LABELS,
+  getSubjectColor,
+  formatDuration,
+  calculateDuration,
+  timeToMinutes,
+} from "@/lib/timetableUtils";
 import {
   Tooltip,
   TooltipContent,
@@ -65,15 +72,12 @@ export default function Timetable() {
   );
 
   // Group by day and find entries that span the time slot
-  const getEntriesForDayAndTime = (day: number, startHour: number) => {
+  const getEntriesForDayAndTime = (day: number, slotTime: string) => {
+    const slotStart = timeToMinutes(slotTime);
+    const slotEnd = slotStart + 30;
     return filteredTimetable.filter((entry) => {
-      const entryStartHour = parseInt(entry.start_time.split(":")[0]);
-      const entryEndHour = parseInt(entry.end_time.split(":")[0]);
-      const entryEndMin = parseInt(entry.end_time.split(":")[1]);
-      
-      // Check if this entry starts at this hour OR spans this hour
-      return entry.day_of_week === day && 
-             entryStartHour === startHour;
+      const entryStart = timeToMinutes(entry.start_time);
+      return entry.day_of_week === day && entryStart >= slotStart && entryStart < slotEnd;
     });
   };
 
@@ -156,14 +160,13 @@ export default function Timetable() {
                 </thead>
                 <tbody>
                   {TIME_SLOTS.map((time) => {
-                    const hour = parseInt(time.split(":")[0]);
                     return (
                       <tr key={time}>
                         <td className="border border-border p-2 bg-muted/50 font-medium text-sm">
                           {time}
                         </td>
                         {[1, 2, 3, 4, 5, 6].map((day) => {
-                          const entries = getEntriesForDayAndTime(day, hour);
+                          const entries = getEntriesForDayAndTime(day, time);
                           return (
                             <td key={day} className="border border-border p-1 align-top">
                               {entries.map((entry) => {

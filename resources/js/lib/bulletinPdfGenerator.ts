@@ -2,9 +2,11 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
 interface GradeData {
+  subject_id?: string | number;
   subject_name: string;
   coefficient: number;
   grade: number;
+  weight?: number;
 }
 
 interface StudentBulletinData {
@@ -16,39 +18,71 @@ interface StudentBulletinData {
   grades: GradeData[];
 }
 
-export const generateStudentBulletin = (data: StudentBulletinData) => {
-  const doc = new jsPDF();
-  
-  // Header with gradient background simulation
-  doc.setFillColor(18, 115, 211); // Primary color
-  doc.rect(0, 0, 210, 45, "F");
-  
-  // School logo area
+const BRAND_NAME = "SMART-SCHOOL";
+const PRIMARY_RGB = [33, 126, 253] as const; // #217EFD
+const SOFT_GRAY = [245, 247, 250] as const;
+const BORDER_GRAY = [226, 232, 240] as const;
+
+const HEADER_HEIGHT = 44;
+const PAGE_MARGIN_X = 20;
+
+const drawHeader = (doc: jsPDF, term: string) => {
+  // Solid header band (clean, admin-first)
+  doc.setFillColor(...PRIMARY_RGB);
+  doc.rect(0, 0, 210, HEADER_HEIGHT, "F");
+
+  // Logo badge
   doc.setFillColor(255, 255, 255);
   doc.circle(25, 22, 12, "F");
-  doc.setTextColor(18, 115, 211);
+  doc.setTextColor(...PRIMARY_RGB);
   doc.setFontSize(14);
   doc.setFont("helvetica", "bold");
-  doc.text("SS", 25, 26, { align: "center" });
-  
-  // School name
+  doc.text("PS", 25, 26, { align: "center" });
+
+  // Brand name and title
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(22);
   doc.setFont("helvetica", "bold");
-  doc.text("SMART SCHOOL", 105, 20, { align: "center" });
-  
+  doc.text(BRAND_NAME, 105, 20, { align: "center" });
+
   doc.setFontSize(12);
   doc.setFont("helvetica", "normal");
   doc.text("Établissement d'Enseignement Privé", 105, 30, { align: "center" });
-  doc.text(`Bulletin de Notes - ${data.term}`, 105, 40, { align: "center" });
-  
+  doc.text(`Bulletin de Notes - ${term}`, 105, 40, { align: "center" });
+};
+
+// Print recommendation: A4, portrait, scale 100%, default margins for best layout fidelity.
+const drawFooter = (doc: jsPDF, createdAt: Date) => {
+  const pageCount = doc.internal.getNumberOfPages();
+  const timestamp = `${createdAt.toLocaleDateString("fr-FR")} à ${createdAt.toLocaleTimeString("fr-FR")}`;
+
+  for (let page = 1; page <= pageCount; page += 1) {
+    doc.setPage(page);
+    doc.setDrawColor(...BORDER_GRAY);
+    doc.line(PAGE_MARGIN_X, 280, 210 - PAGE_MARGIN_X, 280);
+
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(120, 120, 120);
+    doc.text(`Document généré le ${timestamp}`, 105, 286, { align: "center" });
+    doc.text(`${BRAND_NAME} - Système de Gestion Scolaire`, 105, 290, { align: "center" });
+    doc.text(`Page ${page} / ${pageCount}`, 195, 286, { align: "right" });
+  }
+};
+
+export const generateStudentBulletin = (data: StudentBulletinData) => {
+  const doc = new jsPDF();
+
+  // PDF-safe fonts (Helvetica) and SMART-SCHOOL header
+  drawHeader(doc, data.term);
+
   // Student info section
   doc.setTextColor(0, 0, 0);
   doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
   doc.text("INFORMATIONS DE L'ÉLÈVE", 20, 55);
-  
-  doc.setDrawColor(18, 115, 211);
+
+  doc.setDrawColor(...PRIMARY_RGB);
   doc.setLineWidth(0.5);
   doc.line(20, 58, 190, 58);
   
@@ -59,13 +93,42 @@ export const generateStudentBulletin = (data: StudentBulletinData) => {
   doc.text(`Classe: ${data.className}`, 20, 76);
   doc.text(`Année scolaire: ${data.schoolYear}`, 120, 76);
   
-  // Calculate statistics
-  let totalWeightedGrade = 0;
-  let totalCoefficient = 0;
-  data.grades.forEach((g) => {
-    totalWeightedGrade += g.grade * g.coefficient;
-    totalCoefficient += g.coefficient;
+  const groupedGrades = new Map<string, {
+    subject_name: string;
+    coefficient: number;
+    totalWeighted: number;
+    totalWeight: number;
+  }>();
+
+  data.grades.forEach((grade) => {
+    const key = String(grade.subject_id ?? grade.subject_name);
+    if (!groupedGrades.has(key)) {
+      groupedGrades.set(key, {
+        subject_name: grade.subject_name,
+        coefficient: grade.coefficient || 1,
+        totalWeighted: 0,
+        totalWeight: 0,
+      });
+    }
+
+    const entry = groupedGrades.get(key)!;
+    const weight = grade.weight ?? 1;
+    entry.totalWeighted += grade.grade * weight;
+    entry.totalWeight += weight;
   });
+
+  const rows = Array.from(groupedGrades.values()).map((entry) => {
+    const average = entry.totalWeight > 0 ? entry.totalWeighted / entry.totalWeight : 0;
+    return {
+      subject_name: entry.subject_name,
+      coefficient: entry.coefficient,
+      average,
+      points: average * entry.coefficient,
+    };
+  });
+
+  const totalWeightedGrade = rows.reduce((acc, row) => acc + row.points, 0);
+  const totalCoefficient = rows.reduce((acc, row) => acc + row.coefficient, 0);
   const moyenne = totalCoefficient > 0 ? totalWeightedGrade / totalCoefficient : 0;
   
   // Grades table
@@ -74,18 +137,18 @@ export const generateStudentBulletin = (data: StudentBulletinData) => {
   doc.text("RELEVÉ DES NOTES", 20, 92);
   doc.line(20, 95, 190, 95);
   
-  const tableData = data.grades.map((g) => {
+  const tableData = rows.map((row) => {
     const appreciation = 
-      g.grade >= 16 ? "Excellent" :
-      g.grade >= 14 ? "Très Bien" :
-      g.grade >= 12 ? "Bien" :
-      g.grade >= 10 ? "Passable" : "Insuffisant";
+      row.average >= 16 ? "Excellent" :
+      row.average >= 14 ? "Très Bien" :
+      row.average >= 12 ? "Bien" :
+      row.average >= 10 ? "Passable" : "Insuffisant";
     
     return [
-      g.subject_name,
-      g.coefficient.toString(),
-      `${g.grade.toFixed(2)}/20`,
-      (g.grade * g.coefficient).toFixed(2),
+      row.subject_name,
+      row.coefficient.toString(),
+      `${row.average.toFixed(2)}/20`,
+      row.points.toFixed(2),
       appreciation,
     ];
   });
@@ -96,7 +159,7 @@ export const generateStudentBulletin = (data: StudentBulletinData) => {
     body: tableData,
     theme: "grid",
     headStyles: {
-      fillColor: [18, 115, 211],
+      fillColor: PRIMARY_RGB,
       textColor: 255,
       fontSize: 10,
       fontStyle: "bold",
@@ -115,7 +178,7 @@ export const generateStudentBulletin = (data: StudentBulletinData) => {
     },
     margin: { left: 20, right: 20 },
     alternateRowStyles: {
-      fillColor: [245, 247, 250],
+      fillColor: SOFT_GRAY,
     },
   });
   
@@ -123,7 +186,7 @@ export const generateStudentBulletin = (data: StudentBulletinData) => {
   const finalY = (doc as any).lastAutoTable.finalY || 160;
   
   // Average box
-  doc.setFillColor(18, 115, 211);
+  doc.setFillColor(...PRIMARY_RGB);
   doc.rect(20, finalY + 10, 170, 30, "F");
   
   doc.setTextColor(255, 255, 255);
@@ -151,7 +214,7 @@ export const generateStudentBulletin = (data: StudentBulletinData) => {
   doc.text("Observations du conseil de classe:", 20, finalY + 50);
   
   doc.setFont("helvetica", "normal");
-  doc.setDrawColor(200, 200, 200);
+  doc.setDrawColor(...BORDER_GRAY);
   doc.rect(20, finalY + 54, 170, 25);
   
   const observation = moyenne >= 16 ? "Excellent travail. Continuez ainsi!" :
@@ -171,18 +234,10 @@ export const generateStudentBulletin = (data: StudentBulletinData) => {
   doc.line(25, finalY + 110, 75, finalY + 110);
   doc.line(125, finalY + 110, 175, finalY + 110);
   
-  // Footer
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(128, 128, 128);
-  doc.text(
-    `Document généré le ${new Date().toLocaleDateString("fr-FR")} à ${new Date().toLocaleTimeString("fr-FR")}`,
-    105,
-    285,
-    { align: "center" }
-  );
-  doc.text("SMART SCHOOL - Système de Gestion Scolaire", 105, 290, { align: "center" });
-  
+  // Footer with pagination (print-safe)
+  const now = new Date();
+  drawFooter(doc, now);
+
   // Save
   const fileName = `Bulletin_${data.studentId}_${data.term.replace(/\s/g, "_")}.pdf`;
   doc.save(fileName);

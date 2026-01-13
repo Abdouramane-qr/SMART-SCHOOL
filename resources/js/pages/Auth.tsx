@@ -29,12 +29,23 @@ export default function Auth() {
   });
 
   useEffect(() => {
-    // Check if already logged in
-    laravelAuthApi.me().then((user) => {
-      if (user) {
-        navigate("/");
+    let mounted = true;
+    const checkSession = async () => {
+      try {
+        const user = await laravelAuthApi.me();
+        if (mounted && user) {
+          navigate("/");
+        }
+      } catch {
+        // Ignore unauthenticated errors; user stays on Auth screen.
       }
-    });
+    };
+
+    checkSession();
+
+    return () => {
+      mounted = false;
+    };
   }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -59,15 +70,15 @@ export default function Auth() {
         toast.success("Connexion réussie !");
         navigate("/");
       } else {
-        await laravelAuthApi.register({
+        const result = await laravelAuthApi.register({
           email: validatedData.email,
           password: validatedData.password,
           full_name: validatedData.fullName || validatedData.email,
         });
 
-        await refreshSession();
-        toast.success("Compte créé avec succès !");
-        navigate("/");
+        toast.success(result.message || "Compte créé. Validation admin requise.");
+        setIsLogin(true);
+        setFormData({ email: validatedData.email, password: "", fullName: "" });
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -80,6 +91,9 @@ export default function Auth() {
             const lowered = message.toLowerCase();
             if (lowered.includes("invalid credentials")) {
               return "Email ou mot de passe incorrect";
+            }
+            if (lowered.includes("validation")) {
+              return "Compte en attente de validation par un administrateur";
             }
             if (lowered.includes("email")) {
               return "Cet email est déjà utilisé";
@@ -101,7 +115,7 @@ export default function Auth() {
             <GraduationCap className="h-8 w-8 text-white" />
           </div>
           <div>
-            <CardTitle className="text-[26px] font-bold">SMART SCHOOL</CardTitle>
+            <CardTitle className="text-[26px] font-bold">SMART-SCHOOL</CardTitle>
             <CardDescription>
               {isLogin ? "Connectez-vous à votre compte" : "Créez votre compte"}
             </CardDescription>

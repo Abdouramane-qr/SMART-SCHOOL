@@ -12,9 +12,14 @@ use Illuminate\Support\Facades\Cache;
 
 class SubjectController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(Matiere::class, 'subject');
+    }
+
     public function index(Request $request)
     {
-        $schoolId = $request->integer('school_id');
+        $schoolId = $this->resolveSchoolId($request);
         $perPage = $request->integer('per_page');
         $page = $request->integer('page') ?: 1;
         $search = trim((string) $request->string('q'));
@@ -28,12 +33,12 @@ class SubjectController extends Controller
         $tags = CacheKey::tags($schoolId, null);
         $cache = $tags ? Cache::tags($tags) : Cache::store();
 
-        $result = $cache->remember($key, now()->addMinutes(5), function () use ($request, $perPage, $search) {
+        $result = $cache->remember($key, now()->addMinutes(5), function () use ($perPage, $search, $schoolId) {
             $query = Matiere::query()
                 ->orderBy('name');
 
-            if ($request->filled('school_id')) {
-                $query->where('school_id', $request->integer('school_id'));
+            if ($schoolId) {
+                $query->where('school_id', $schoolId);
             }
 
             if ($search !== '') {
@@ -59,6 +64,9 @@ class SubjectController extends Controller
             'coefficient' => ['nullable', 'numeric'],
         ]);
 
+        $schoolId = $this->resolveSchoolId($request);
+        $validated['school_id'] = $schoolId;
+
         if (empty($validated['school_id'])) {
             $validated['school_id'] = $request->user()?->school_id ?? School::query()->value('id');
         }
@@ -77,6 +85,9 @@ class SubjectController extends Controller
             'code' => ['sometimes', 'string', 'max:50'],
             'coefficient' => ['sometimes', 'numeric'],
         ]);
+
+        $schoolId = $this->resolveSchoolId($request);
+        $validated['school_id'] = $schoolId;
 
         $subject->update($validated);
         Cache::tags(CacheKey::tags($subject->school_id, null))->flush();

@@ -10,6 +10,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Tables\Table;
 use Filament\Tables;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Support\Facades\Hash;
 
@@ -73,6 +74,11 @@ class UserResource extends Resource
                 TextColumn::make('email')
                     ->searchable()
                     ->sortable(),
+                TextColumn::make('approved_at')
+                    ->label('Statut')
+                    ->badge()
+                    ->color(fn (?string $state): string => $state ? 'success' : 'warning')
+                    ->formatStateUsing(fn (?string $state): string => $state ? 'Approuvé' : 'En attente'),
                 TextColumn::make('roles.name')
                     ->label('Rôles')
                     ->badge()
@@ -87,6 +93,17 @@ class UserResource extends Resource
                 //
             ])
             ->actions([
+                Action::make('approve')
+                    ->label('Approuver')
+                    ->icon('heroicon-m-check-circle')
+                    ->visible(fn (User $record): bool => ! $record->isApproved())
+                    ->action(function (User $record): void {
+                        $record->forceFill([
+                            'approved_at' => now(),
+                            'approved_by' => auth()->id(),
+                        ])->save();
+                    })
+                    ->requiresConfirmation(),
                 Tables\Actions\EditAction::make()
                     ->tooltip('Modifier'),
             ])

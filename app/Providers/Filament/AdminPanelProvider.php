@@ -6,7 +6,6 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Enums\ThemeMode;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -27,17 +26,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
-            ->brandName('Smart School')
-            ->defaultThemeMode(ThemeMode::Light)
-            ->viteTheme('resources/css/filament/admin/theme.css')
-            ->colors([
-                'primary' => '#217EFD',
-                'info' => '#217EFD',
-                'success' => '#217EFD',
-                'warning' => '#B3B3B3',
-                'danger' => '#EF4444',
-            ])
-            ->font('Source Sans 3')
+            ->brandName('SMART-SCHOOL')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([

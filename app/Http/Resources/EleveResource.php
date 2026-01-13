@@ -7,6 +7,11 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class EleveResource extends JsonResource
 {
+    public function jsonOptions(): int
+    {
+        return JSON_PRESERVE_ZERO_FRACTION;
+    }
+
     /**
      * Transform the resource into an array.
      *
@@ -17,6 +22,10 @@ class EleveResource extends JsonResource
         $payments = $this->whenLoaded('paiements');
         $totalPaid = $this->total_paid ?? ($payments ? $payments->sum(fn ($payment) => (float) ($payment->paid_amount ?? $payment->amount ?? 0)) : 0);
         $totalDue = $this->total_due ?? ($payments ? $payments->sum(fn ($payment) => (float) ($payment->amount ?? 0)) : 0);
+        $birthDate = $this->birth_date;
+        if ($birthDate instanceof \Carbon\CarbonInterface) {
+            $birthDate = $birthDate->toDateString();
+        }
 
         return [
             'id' => $this->id,
@@ -27,7 +36,7 @@ class EleveResource extends JsonResource
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
             'gender' => $this->gender,
-            'birth_date' => $this->birth_date,
+            'birth_date' => $birthDate,
             'address' => $this->address,
             'user_id' => $this->user_id,
             'parent_name' => $this->parent_name,

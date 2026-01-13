@@ -1,30 +1,36 @@
 # Repository Guidelines
 
-## Project Overview
-Laravel 12 + React (Breeze) + Vite + Tailwind. Auth is provided by Laravel Breeze with Inertia.
+## Project Structure & Module Organization
+- `app/` holds Laravel models, controllers, policies, and Filament resources.
+- `routes/` contains backend route definitions (web/api/admin).
+- `resources/js/` is the React app (Vite). Key entry points: `resources/js/main.tsx` and `resources/js/App.tsx`.
+- `resources/js/pages/` contains top-level screens (PascalCase files like `Dashboard.tsx`).
+- `database/` stores migrations, factories, and seeders; roles/permissions live in `database/seeders/RolesAndPermissionsSeeder.php`.
+- `tests/` contains Laravel Feature and Unit tests; React tests live under `resources/js/**`.
 
-## Local Development
-- `composer install`
-- `npm install`
-- `php artisan migrate`
-- `php artisan serve`
-- `npm run dev`
+## Build, Test, and Development Commands
+- `composer install` installs PHP dependencies.
+- `npm install` installs frontend dependencies.
+- `composer run dev` starts Laravel (`:8000`), Vite (`:5173`), queue, and logs via `concurrently`.
+- `composer run setup` bootstraps env, DB migrations, and builds assets.
+- `npm run build` produces the Vite production bundle.
+- `composer run test` or `php artisan test` runs backend tests.
+- `npm run test` runs Vitest for React.
 
-## Database
-PostgreSQL is required. Configure `.env` with `DB_CONNECTION=pgsql` and the local port (this environment uses `5433`). Database name: `smart_school`.
+## Coding Style & Naming Conventions
+- `.editorconfig` enforces 4-space indentation, LF, and final newlines.
+- PHP follows Laravel conventions; use `vendor/bin/pint` for formatting when needed.
+- React/TS files live in `resources/js/`; import alias `@/` maps to `resources/js`.
+- Use PascalCase for page/components files and keep folder names aligned with existing domains (e.g., `resources/js/components/students`).
 
-## Migration Notice
-No new features should be added until the backend migration from Supabase to Laravel is completed. Limit work to setup, audits, and migration tasks.
+## Testing Guidelines
+- Backend: PHPUnit suites in `tests/Feature` and `tests/Unit`; tests use `.env.testing` and a dedicated `*_test` DB.
+- Frontend: Vitest with jsdom; tests must match `resources/js/**/*.test.ts(x)` and use setup at `resources/js/test/setup.ts`.
 
-## Migration Progress
-- Base schema created: schools, academic_years, classes, eleves, parents, enseignants, matieres, paiements, notes, absences, and pivot tables.
-- Eloquent relations wired for core entities (eleve, classe, paiement, note, absence).
-- Filament installed with Admin panel; resources added for eleves, classes, paiements, notes, absences.
-- Roles and permissions seeded via spatie/laravel-permission (super_admin, admin_ecole, comptable, enseignant).
-- API routes (Sanctum) added for eleves, classes, paiements, notes, absences; dashboard and stats endpoints added with Redis tag caching (par ecole et annee scolaire).
-- Champs additionnels pour compatibilite migration: eleves (student_id, full_name, address, parent_*), paiements (paid_amount, payment_type, due_date, notes).
-- Auth SPA: endpoints API login/register/logout + /me (roles/permissions) + users/roles management (spatie).
-- IA locale: endpoint `POST /api/ai-assistant` (reponse locale placeholder).
-- Nouvelles tables/API pour migration: enrollments, expenses, salaries, assets, messages, finance_settings, audit_teachers, plus champs enseignants/classes/absences/paiements.
-- Ajouts schema: `classrooms`, `timetables`, extension `notes` (class_id, grade_type, weight, description, evaluation_date) et profils users (address, avatar_url).
-- Nouvelles APIs: `subjects`, `classrooms`, `timetable` avec ressources JSON alignees front.
+## Commit & Pull Request Guidelines
+- Git history shows short, descriptive subjects, sometimes with a date suffix (e.g., `Update 08-01-2025 ...`). Keep commits concise and scoped.
+- PRs should include a summary, testing notes, and screenshots for UI changes. Link related issues when applicable.
+
+## Configuration & Access Notes
+- Local configuration lives in `.env` (use `VITE_` prefix for frontend env vars).
+- Admin UI is Filament at `/admin`; main app is React at `/` (see `README_STRUCTURE.md` for the split).

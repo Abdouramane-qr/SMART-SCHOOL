@@ -53,7 +53,7 @@ export default function Settings() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <div className="h-12 w-12 md:h-14 md:w-14 rounded-xl bg-primary/10 flex items-center justify-center shadow-sm">
-          <SettingsIcon className="h-6 w-6 md:h-8 md:w-8 text-primary-foreground" />
+          <SettingsIcon className="h-6 w-6 md:h-8 md:w-8 text-primary" />
         </div>
         <div>
           <h1 className="text-2xl md:text-[26px] md:text-[28px] font-bold text-foreground">Paramètres</h1>
@@ -66,11 +66,12 @@ export default function Settings() {
       {/* Settings Cards Overview */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {tabs.map((tab) => (
-          <Card 
+          <Card
             key={tab.id} 
             className={`cursor-pointer transition-colors hover:border-primary/50 ${
               activeTab === tab.id ? 'border-primary shadow-sm' : ''
             }`}
+            density="compact"
             onClick={() => setActiveTab(tab.id)}
           >
             <CardContent className="pt-6">
@@ -106,8 +107,8 @@ export default function Settings() {
         </TabsList>
 
         <TabsContent value="school-years" className="mt-6">
-          <Card>
-            <CardHeader className="border-b">
+          <Card density="spacious">
+            <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-primary" />
                 Gestion des Années Scolaires
@@ -116,15 +117,15 @@ export default function Settings() {
                 Créez et gérez les années scolaires. Définissez l'année en cours pour l'ensemble du système.
               </CardDescription>
             </CardHeader>
-            <CardContent className="pt-6">
+            <CardContent>
               <SchoolYearsContent />
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="subjects" className="mt-6">
-          <Card>
-            <CardHeader className="border-b">
+          <Card density="spacious">
+            <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <BookMarked className="h-5 w-5 text-primary" />
                 Gestion des Matières
@@ -133,15 +134,15 @@ export default function Settings() {
                 Configurez les matières enseignées, leurs codes et coefficients pour le calcul des moyennes.
               </CardDescription>
             </CardHeader>
-            <CardContent className="pt-6">
+            <CardContent>
               <SubjectsContent />
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="classrooms" className="mt-6">
-          <Card>
-            <CardHeader className="border-b">
+          <Card density="spacious">
+            <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Building2 className="h-5 w-5 text-primary" />
                 Gestion des Salles
@@ -150,15 +151,15 @@ export default function Settings() {
                 Gérez les salles de classe, leur capacité, emplacement et équipements disponibles.
               </CardDescription>
             </CardHeader>
-            <CardContent className="pt-6">
+            <CardContent>
               <ClassroomsContent />
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="users" className="mt-6">
-          <Card>
-            <CardHeader className="border-b">
+          <Card density="spacious">
+            <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <UserCog className="h-5 w-5 text-primary" />
                 Gestion des Utilisateurs
@@ -167,7 +168,7 @@ export default function Settings() {
                 Gérez les comptes utilisateurs et attribuez les rôles d'accès (Admin, Comptable, Enseignant, Élève, Parent).
               </CardDescription>
             </CardHeader>
-            <CardContent className="pt-6">
+            <CardContent>
               <UserManagement />
             </CardContent>
           </Card>
@@ -175,7 +176,7 @@ export default function Settings() {
       </Tabs>
 
       {/* System Info Card */}
-      <Card className="bg-muted/50">
+      <Card className="bg-muted/50" density="spacious" variant="premium">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <Database className="h-5 w-5" />

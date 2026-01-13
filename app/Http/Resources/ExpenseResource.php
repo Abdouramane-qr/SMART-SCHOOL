@@ -23,6 +23,9 @@ class ExpenseResource extends JsonResource
             'expense_date' => $this->expense_date,
             'receipt_number' => $this->receipt_number,
             'notes' => $this->notes,
+            'status' => $this->status,
+            'approved_at' => $this->approved_at,
+            'approved_by' => $this->approved_by,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];
